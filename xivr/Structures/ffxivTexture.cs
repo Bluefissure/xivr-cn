@@ -4,22 +4,22 @@ using FFXIVClientStructs.FFXIV.Client.Graphics.Render;
 
 namespace xivr.Structures
 {
-    [StructLayout(LayoutKind.Explicit, Size = 168)]
+    [StructLayout(LayoutKind.Explicit, Size = 0xA8)]
     public unsafe struct Texture
     {
-        [FieldOffset(0)]
+        [FieldOffset(0x00)]
         public unsafe void* vtbl;
 
-        [FieldOffset(24)]
+        [FieldOffset(0x18)]
         public long uk5;
 
-        [FieldOffset(32)]
+        [FieldOffset(0x20)]
         public Notifier Notifier;
 
-        [FieldOffset(56)]
+        [FieldOffset(0x38)]
         public uint Width;
 
-        [FieldOffset(60)]
+        [FieldOffset(0x3C)]
         public uint Height;
 
         [FieldOffset(0x40)]
@@ -48,6 +48,9 @@ namespace xivr.Structures
 
         [FieldOffset(0x58)]
         public unsafe void* D3D11ShaderResourceView;
+
+        [FieldOffset(0x60)]
+        public long uk60;
 
         [FieldOffset(0x68)]
         public UInt64 D3D11RenderTargetPtr;
