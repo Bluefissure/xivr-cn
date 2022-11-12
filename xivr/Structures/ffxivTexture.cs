@@ -49,9 +49,6 @@ namespace xivr.Structures
         [FieldOffset(0x58)]
         public unsafe void* D3D11ShaderResourceView;
 
-        [FieldOffset(0x60)]
-        public long uk60;
-
         [FieldOffset(0x68)]
         public UInt64 D3D11RenderTargetPtr;
     }
