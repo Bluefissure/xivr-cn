@@ -116,7 +116,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 void OpenLogFile()
 {
 	if(logging)
-		myfile.open("d:\\Projects\\output.txt", std::ios::out | std::ios::app);
+		myfile.open("F:\\XIVR_DBG\\out.txt", std::ios::out | std::ios::app);
 }
 
 void CloseLogFile()
@@ -223,6 +223,7 @@ void DestroyBackbufferClone()
 __declspec(dllexport) void SetDX11(unsigned long long struct_device)
 {
 	myfile << "SetDX11:\n";
+
 	if (device == nullptr)
 	{
 		device = (stDevice*)struct_device;
@@ -293,8 +294,8 @@ __declspec(dllexport) void SetDX11(unsigned long long struct_device)
 		uiRenderTexture[0].Notifier = device->SwapChain->BackBuffer->Notifier;
 		uiRenderTexture[0].Width = uiRenderTarget.textureDesc.Width;
 		uiRenderTexture[0].Height = uiRenderTarget.textureDesc.Height;
-		uiRenderTexture[0].Width1 = uiRenderTarget.textureDesc.Width;
-		uiRenderTexture[0].Height1 = uiRenderTarget.textureDesc.Height;
+		// uiRenderTexture[0].Width1 = uiRenderTarget.textureDesc.Width;
+		// uiRenderTexture[0].Height1 = uiRenderTarget.textureDesc.Height;
 		uiRenderTexture[0].Texture = uiRenderTarget.pTexture;
 		uiRenderTexture[0].ShaderResourceView = uiRenderTarget.pShaderResource;
 		uiRenderTexture[0].RenderTargetPtr = (unsigned long long)&uiRenderTarget.pRenderTarget;
@@ -304,8 +305,8 @@ __declspec(dllexport) void SetDX11(unsigned long long struct_device)
 		uiRenderTexture[1].Notifier = device->SwapChain->BackBuffer->Notifier;
 		uiRenderTexture[1].Width = uiRenderTarget.textureDesc.Width;
 		uiRenderTexture[1].Height = uiRenderTarget.textureDesc.Height;
-		uiRenderTexture[1].Width1 = uiRenderTarget.textureDesc.Width;
-		uiRenderTexture[1].Height1 = uiRenderTarget.textureDesc.Height;
+		// uiRenderTexture[1].Width1 = uiRenderTarget.textureDesc.Width;
+		// uiRenderTexture[1].Height1 = uiRenderTarget.textureDesc.Height;
 		uiRenderTexture[1].Texture = uiRenderTarget.pTexture;
 		uiRenderTexture[1].ShaderResourceView = uiRenderTarget.pShaderResource;
 		uiRenderTexture[1].RenderTargetPtr = (unsigned long long)&uiRenderTarget.pRenderTarget;

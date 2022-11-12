@@ -241,7 +241,6 @@ namespace xivr
             }
         }
 
-
         public bool Initialize()
         {
             if (initalized == false)
@@ -263,7 +262,6 @@ namespace xivr
 
                 SetFunctionHandles();
                 SetInputHandles();
-
 
                 //----
                 // Initalize all sigs
@@ -290,8 +288,8 @@ namespace xivr
         {
             if (initalized == true && hooksSet == false && VR_IsHmdPresent())
             {
-                PluginLog.Log($"VRInit {(IntPtr)FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.Device.Instance():X}");
-                SetDX11((IntPtr)FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.Device.Instance());
+                PluginLog.Log($"VRInit {(IntPtr) Device.Instance():X}");
+                SetDX11((IntPtr) Device.Instance());
 
                 //string filePath = DalamudApi.PluginInterface.AssemblyLocation.DirectoryName + "\\config\\actions.json";
                 string filePath = Path.Join(DalamudApi.PluginInterface.AssemblyLocation.DirectoryName, "config", "actions.json");
