@@ -48,21 +48,21 @@ namespace xivr
                 }
 
                 bool horizontalLock = xivr.Configuration.horizontalLock;
-                if (ImGui.Checkbox("水平自动贴合旋转", ref horizontalLock))
+                if (ImGui.Checkbox("水平自动靠近旋转", ref horizontalLock))
                 {
                     xivr.Configuration.horizontalLock = horizontalLock;
                     xivr.Configuration.Save();
                 }
 
                 bool verticalLock = xivr.Configuration.verticalLock;
-                if (ImGui.Checkbox("垂直自动贴合旋转", ref verticalLock))
+                if (ImGui.Checkbox("垂直自动靠近旋转", ref verticalLock))
                 {
                     xivr.Configuration.verticalLock = verticalLock;
                     xivr.Configuration.Save();
                 }
 
                 bool horizonlLock = xivr.Configuration.horizonLock;
-                if (ImGui.Checkbox("保持头显与水平线高度一致", ref horizonlLock))
+                if (ImGui.Checkbox("保持头显与地平线高度一致", ref horizonlLock))
                 {
                     xivr.Configuration.horizonLock = horizonlLock;
                     xivr.Configuration.Save();
