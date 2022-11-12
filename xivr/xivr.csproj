@@ -31,14 +31,16 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="xivr.png" />
-		
+
 		<ContentWithTargetPath Include="../config/actions.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-
+			<TargetPath>config/actions.json</TargetPath>
+		</ContentWithTargetPath>
+		
 		<ContentWithTargetPath Include="../config/index-marulu-221110.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+			<TargetPath>config/index-marulu-221110.json</TargetPath>
+		</ContentWithTargetPath>
 	</ItemGroup>
 
 	<ItemGroup>
