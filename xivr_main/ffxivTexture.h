@@ -4,8 +4,7 @@
 struct stTexture
 {
 	/* 0x000 */ unsigned long long uk1;
-	/* 0x008 */ unsigned int uk2;
-	/* 0x00C */ unsigned int uk3;
+	/* 0x008 */ byte uk2_3[0x8];
 	/* 0x010 */ unsigned long long uk4;
 	/* 0x018 */ unsigned long long uk5;
 	/* 0x020 */ unsigned long long Notifier;
