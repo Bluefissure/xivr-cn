@@ -10,7 +10,7 @@
 	</PropertyGroup>
 	
 	<PropertyGroup>
-		<TargetFramework>net6.0-windows</TargetFramework>
+		<TargetFramework>net5.0-windows</TargetFramework>
 		<Platforms>x64</Platforms>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
@@ -21,7 +21,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+		<DalamudLibPath>..\..\DalamudDep\</DalamudLibPath>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	</PropertyGroup>
 
@@ -33,10 +33,6 @@
 	  <EmbeddedResource Include="xivr.png" />
 	</ItemGroup>
 
-	<Target Name="CompileNativesDip17" BeforeTargets="PrepareForBuild" Condition="'$(IsPlogonBuild)'=='True'">
-		<Exec Command="cd .. &amp;&amp; bash dip17build.sh" />
-	</Target>
-	
 	<ItemGroup Condition="'$(IsPlogonBuild)'=='True'">
 		<None Remove="xivr_main.dll" />
 		<Content Include="xivr_main.dll">

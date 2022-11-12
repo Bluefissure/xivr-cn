@@ -20,55 +20,55 @@ namespace xivr
             {
                 ImGui.BeginGroup();
                 bool vrEnabled = xivr.Configuration.isEnabled;
-                if (ImGui.Checkbox("Enable", ref vrEnabled))
+                if (ImGui.Checkbox("启用", ref vrEnabled))
                 {
                     xivr.Configuration.isEnabled = vrEnabled;
                     xivr.Configuration.Save();
                 }
 
                 bool vrAutoEnabled = xivr.Configuration.isAutoEnabled;
-                if (ImGui.Checkbox("Auto Enable if steamvr is active", ref vrAutoEnabled))
+                if (ImGui.Checkbox("若SteamVR可用自动启用", ref vrAutoEnabled))
                 {
                     xivr.Configuration.isAutoEnabled = vrAutoEnabled;
                     xivr.Configuration.Save();
                 }
 
                 bool forceFloatingScreen = xivr.Configuration.forceFloatingScreen;
-                if (ImGui.Checkbox("Force floating screen", ref forceFloatingScreen))
+                if (ImGui.Checkbox("强制悬浮屏幕", ref forceFloatingScreen))
                 {
                     xivr.Configuration.forceFloatingScreen = forceFloatingScreen;
                     xivr.Configuration.Save();
                 }
 
                 bool forceFloatingInCutscene = xivr.Configuration.forceFloatingInCutscene;
-                if (ImGui.Checkbox("Force floating screen in Cutscene", ref forceFloatingInCutscene))
+                if (ImGui.Checkbox("强制过场动画中悬浮屏幕", ref forceFloatingInCutscene))
                 {
                     xivr.Configuration.forceFloatingInCutscene = forceFloatingInCutscene;
                     xivr.Configuration.Save();
                 }
 
                 bool horizontalLock = xivr.Configuration.horizontalLock;
-                if (ImGui.Checkbox("Horizontal Snap Turning", ref horizontalLock))
+                if (ImGui.Checkbox("水平自动贴合旋转", ref horizontalLock))
                 {
                     xivr.Configuration.horizontalLock = horizontalLock;
                     xivr.Configuration.Save();
                 }
 
                 bool verticalLock = xivr.Configuration.verticalLock;
-                if (ImGui.Checkbox("Vertical Snap Turning", ref verticalLock))
+                if (ImGui.Checkbox("垂直自动贴合旋转", ref verticalLock))
                 {
                     xivr.Configuration.verticalLock = verticalLock;
                     xivr.Configuration.Save();
                 }
 
                 bool horizonlLock = xivr.Configuration.horizonLock;
-                if (ImGui.Checkbox("Keep headset level with horizon", ref horizonlLock))
+                if (ImGui.Checkbox("保持头显与水平线高度一致", ref horizonlLock))
                 {
                     xivr.Configuration.horizonLock = horizonlLock;
                     xivr.Configuration.Save();
                 }
 
-                if (ImGui.Button("Recenter"))
+                if (ImGui.Button("重新定位中间点"))
                 {
                     xivr.Configuration.runRecenter = false;
                     xivr.Configuration.Save();

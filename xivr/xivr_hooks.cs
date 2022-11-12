@@ -762,7 +762,7 @@ namespace xivr
         [HandleAttribute("DXGIPresent", attribFnType.Initalize)]
         public void DXGIPresentInit(bool status)
         {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? C6 47 79 00 48 8B 8F");
+            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? C6 43 61 ?? 48 8B 8B E0 01 00 00");
             //PluginLog.Log($"DXGIPresent: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             DXGIPresentHook = Hook<DXGIPresentDg>.FromAddress(tmpAddress, DXGIPresentFn);
         }
@@ -807,7 +807,7 @@ namespace xivr
         [HandleAttribute("CamManagerSetMatrix", attribFnType.Initalize)]
         public void CamManagerSetMatrixInit(bool status)
         {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E9 74 0A 3D 00");
+            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC ?? 48 8B D9 48 8B FA");
             //PluginLog.Log($"CamManagerSetMatrix: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             CamManagerSetMatrixHook = Hook<CamManagerSetMatrixDg>.FromAddress(tmpAddress, CamManagerSetMatrixFn);
         }
@@ -879,7 +879,7 @@ namespace xivr
         [HandleAttribute("CalculateViewMatrix", attribFnType.Initalize)]
         public void CalculateViewMatrixInit(bool status)
         {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 8B 83 EC 00 00 00 D1 E8 A8 01 74 1B");
+            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 8B 83 EC 00 00 00 D1 ?? A8 ?? 74 ?? 48 8B 05 ?? ?? ?? ?? 4C 8B 83 E0 00 00 00");
             //PluginLog.Log($"CalculateViewMatrix: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             CalculateViewMatrixHook = Hook<CalculateViewMatrixDg>.FromAddress(tmpAddress, CalculateViewMatrixFn);
         }
@@ -950,7 +950,7 @@ namespace xivr
         [HandleAttribute("UpdateRotation", attribFnType.Initalize)]
         public void UpdateRotationInit(bool status)
         {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 0F B6 93 20 02 00 00 48 8B CB");
+            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 0F B6 93 14 02 00 00");
             //PluginLog.Log($"UpdateRotation: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             UpdateRotationHook = Hook<UpdateRotationDg>.FromAddress(tmpAddress, UpdateRotationFn);
         }
@@ -1017,7 +1017,7 @@ namespace xivr
         [HandleAttribute("MakeProjectionMatrix2", attribFnType.Initalize)]
         public void MakeProjectionMatrix2Init(bool status)
         {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 4C 8B 2D ?? ?? ?? ?? 41 0F 28 C2");
+            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 4C 8B 3D ?? ?? ?? ?? 41 0F 28 C1");
             //PluginLog.Log($"MakeProjectionMatrix2: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             MakeProjectionMatrix2Hook = Hook<MakeProjectionMatrix2Dg>.FromAddress(tmpAddress, MakeProjectionMatrix2Fn);
         }
