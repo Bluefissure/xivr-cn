@@ -21,7 +21,6 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 
-
 namespace xivr
 {
     public enum attribFnType
@@ -555,7 +554,7 @@ namespace xivr
         public void DisableLeftClickInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? BA ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 84 C0 74 16");
-            //PluginLog.Log($"DisableLeftClick: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"DisableLeftClick: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             DisableLeftClickHook = Hook<DisableLeftClickDg>.FromAddress(tmpAddress, DisableLeftClickFn);
         }
 
@@ -586,7 +585,7 @@ namespace xivr
         public void DisableRightClickInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 48 8B CE E8 ?? ?? ?? ?? 48 85 C0 74 1B");
-            //PluginLog.Log($"DisableRightClick: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"DisableRightClick: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             DisableRightClickHook = Hook<DisableRightClickDg>.FromAddress(tmpAddress, DisableRightClickFn);
         }
 
@@ -617,7 +616,7 @@ namespace xivr
         public void SetRenderTargetInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 40 38 BC 24 00 02 00 00");
-            //PluginLog.Log($"SetRenderTarget: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"SetRenderTarget: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             SetRenderTargetFn = Marshal.GetDelegateForFunctionPointer<SetRenderTargetDg>(tmpAddress);
         }
 
@@ -639,7 +638,7 @@ namespace xivr
         public void AllocateQueueMemoryInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 48 85 C0 74 ?? C7 00 04 00 00 00");
-            //PluginLog.Log($"AllocateQueueMemmory: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"AllocateQueueMemmory: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             AllocateQueueMemmoryFn = Marshal.GetDelegateForFunctionPointer<AllocateQueueMemoryDg>(tmpAddress);
         }
 
@@ -661,7 +660,7 @@ namespace xivr
         public void PushbackInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? EB ?? 8B 87 6C 04 00 00");
-            //PluginLog.Log($"Pushback: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"Pushback: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             PushbackFn = Marshal.GetDelegateForFunctionPointer<PushbackDg>(tmpAddress);
         }
 
@@ -683,7 +682,7 @@ namespace xivr
         public void PushbackUIInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? EB 05 E8 ?? ?? ?? ?? 48 8B 5C 24 78");
-            //PluginLog.Log($"PushbackUI: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"PushbackUI: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             PushbackUIHook = Hook<PushbackUIDg>.FromAddress(tmpAddress, PushbackUIFn);
         }
 
@@ -726,7 +725,7 @@ namespace xivr
         public void OnRequestedUpdateInit(bool status)
         {
             IntPtr tmpAddress = (IntPtr)BaseAddress + 0xF2BC60; //  DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 48 8B CB E8 ?? ?? ?? ?? 8B 83 90 1A 01 00");
-            //PluginLog.Log($"OnRequestedUpdate: {tmpAddress:X}");
+            PluginLog.Log($"OnRequestedUpdate: {tmpAddress:X}");
             OnRequestedUpdateHook = Hook<OnRequestedUpdateDg>.FromAddress(tmpAddress, OnRequestedUpdateFn);
         }
 
@@ -761,7 +760,7 @@ namespace xivr
         public void DXGIPresentInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? C6 43 61 ?? 48 8B 8B E0 01 00 00");
-            //PluginLog.Log($"DXGIPresent: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"DXGIPresent: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             DXGIPresentHook = Hook<DXGIPresentDg>.FromAddress(tmpAddress, DXGIPresentFn);
         }
 
@@ -806,7 +805,7 @@ namespace xivr
         public void CamManagerSetMatrixInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC ?? 48 8B D9 48 8B FA");
-            //PluginLog.Log($"CamManagerSetMatrix: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"CamManagerSetMatrix: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             CamManagerSetMatrixHook = Hook<CamManagerSetMatrixDg>.FromAddress(tmpAddress, CamManagerSetMatrixFn);
         }
 
@@ -839,7 +838,7 @@ namespace xivr
         public void SetUIProjInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 8B 0D ?? ?? ?? ?? 48 8D 94 24");
-            //PluginLog.Log($"SetUIProj: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"SetUIProj: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             SetUIProjHook = Hook<SetUIProjDg>.FromAddress(tmpAddress, SetUIProjFn);
         }
 
@@ -878,7 +877,7 @@ namespace xivr
         public void CalculateViewMatrixInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 8B 83 EC 00 00 00 D1 ?? A8 ?? 74 ?? 48 8B 05 ?? ?? ?? ?? 4C 8B 83 E0 00 00 00");
-            //PluginLog.Log($"CalculateViewMatrix: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"CalculateViewMatrix: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             CalculateViewMatrixHook = Hook<CalculateViewMatrixDg>.FromAddress(tmpAddress, CalculateViewMatrixFn);
         }
 
@@ -949,7 +948,7 @@ namespace xivr
         public void UpdateRotationInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 0F B6 93 14 02 00 00");
-            //PluginLog.Log($"UpdateRotation: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"UpdateRotation: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             UpdateRotationHook = Hook<UpdateRotationDg>.FromAddress(tmpAddress, UpdateRotationFn);
         }
 
@@ -1016,7 +1015,7 @@ namespace xivr
         public void MakeProjectionMatrix2Init(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 4C 8B 3D ?? ?? ?? ?? 41 0F 28 C1");
-            //PluginLog.Log($"MakeProjectionMatrix2: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"MakeProjectionMatrix2: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             MakeProjectionMatrix2Hook = Hook<MakeProjectionMatrix2Dg>.FromAddress(tmpAddress, MakeProjectionMatrix2Fn);
         }
 
@@ -1054,7 +1053,7 @@ namespace xivr
         public void RenderThreadSetRenderTargetInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? F3 41 0F 10 5A 18");
-            //PluginLog.Log($"RenderThreadSetRenderTarget: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"RenderThreadSetRenderTarget: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             RenderThreadSetRenderTargetHook = Hook<RenderThreadSetRenderTargetDg>.FromAddress(tmpAddress, RenderThreadSetRenderTargetFn);
         }
 
@@ -1093,7 +1092,7 @@ namespace xivr
         public void NamePlateDrawInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("0F B7 81 ?? ?? ?? ?? 4C 8B C1 66 C1 E0 06");
-            //PluginLog.Log($"NamePlateDraw: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"NamePlateDraw: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             NamePlateDrawHook = Hook<NamePlateDrawDg>.FromAddress(tmpAddress, NamePlateDrawFn);
         }
 
@@ -1151,7 +1150,7 @@ namespace xivr
         public void LoadCharacterInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("48 89 5C 24 10 48 89 6C 24 18 56 57 41 57 48 83 EC 30 48 8B F9 4D 8B F9 8B CA 49 8B D8 8B EA");
-            //PluginLog.Log($"LoadCharacter: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"LoadCharacter: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             //LoadCharacterFn = Marshal.GetDelegateForFunctionPointer<LoadCharacterDg>(LoadCharacterAddr);
             LoadCharacterHook = Hook<LoadCharacterDg>.FromAddress(tmpAddress, LoadCharacterFn);
         }
@@ -1209,7 +1208,7 @@ namespace xivr
         public void GetAnalogueValueInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 66 44 0F 6E C3");
-            //PluginLog.Log($"GetAnalogueValue: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
+            PluginLog.Log($"GetAnalogueValue: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             GetAnalogueValueHook = Hook<GetAnalogueValueDg>.FromAddress(tmpAddress, GetAnalogueValueFn);
         }
 
@@ -1291,7 +1290,7 @@ namespace xivr
         public void ControllerInputInit(bool status)
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 41 8B 86 3C 04 00 00");
-            //PluginLog.Log($"ControllerInput: {tmpAddress:X}");
+            PluginLog.Log($"ControllerInput: {tmpAddress:X}");
             ControllerInputHook = Hook<ControllerInputDg>.FromAddress(tmpAddress, ControllerInputFn);
         }
 

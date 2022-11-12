@@ -1,14 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<Authors></Authors>
 		<Company></Company>
-		<Version>0.0.0.1</Version>
+		<Version>0.0.0.3</Version>
 		<Description>XIVR.</Description>
 		<Copyright></Copyright>
 		<PackageProjectUrl></PackageProjectUrl>
 	</PropertyGroup>
-	
+
 	<PropertyGroup>
 		<TargetFramework>net5.0-windows</TargetFramework>
 		<Platforms>x64</Platforms>
@@ -26,7 +26,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Remove="xivr.png" />
+		<None Remove="xivr.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -34,13 +34,11 @@
 		
 		<ContentWithTargetPath Include="../config/actions.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>config/actions.json</TargetPath>
-		</ContentWithTargetPath>
+		</Content>
 
 		<ContentWithTargetPath Include="../config/index-marulu-221110.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>config/index-marulu-221110.json</TargetPath>
-		</ContentWithTargetPath>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup>
