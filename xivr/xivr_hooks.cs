@@ -725,13 +725,12 @@ namespace xivr
             //Structures.Texture* texture1 = (Structures.Texture*)(tAddr);
             //SetRenderTargetFn(threadedOffset, 1, &texture1, 0, 0, 0);
 
-            AddClearCommand();
+            AddClearCommand(); // TODO Analyze E8 ? ? ? ? 48 85 C0 74 ? C7 00 ? ? ? ? 48 8B D0 48 8B CB 48 89 70 08 89 68 10
 
             overrideFromParent.Push(true);
             PushbackUIHook.Original(a, b);
             overrideFromParent.Pop();
         }
-
 
 
         //----
@@ -742,11 +741,13 @@ namespace xivr
         private delegate void OnRequestedUpdateDg(UInt64 a, UInt64 b, UInt64 c);
         private Hook<OnRequestedUpdateDg> OnRequestedUpdateHook;
 
+
+        // 48 8B C4 41 56 48 81 EC ? ? ? ? 48 89 58 F0
         [HandleAttribute("OnRequestedUpdate", attribFnType.Initalize)]
         public void OnRequestedUpdateInit(bool status)
         {
-            IntPtr tmpAddress = (IntPtr)BaseAddress + 0xF2BC60; //  DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 48 8B CB E8 ?? ?? ?? ?? 8B 83 90 1A 01 00");
-            PluginLog.Log($"OnRequestedUpdate: {tmpAddress:X}");
+            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("48 8B C4 41 56 48 81 EC ?? ?? ?? ?? 48 89 58 F0");
+            PluginLog.Log($"OnRequestedUpdate: {tmpAddress:X} {(UInt64)tmpAddress - BaseAddress:X}");
             OnRequestedUpdateHook = Hook<OnRequestedUpdateDg>.FromAddress(tmpAddress, OnRequestedUpdateFn);
         }
 
@@ -761,7 +762,7 @@ namespace xivr
 
         void OnRequestedUpdateFn(UInt64 a, UInt64 b, UInt64 c)
         {
-            UInt64 globalScaleAddress = (BaseAddress + 0x1FE1A78);
+            UInt64 globalScaleAddress = (BaseAddress + 0x1F0BAF8); // F3 44 0F 10 05 ? ? ? ? 4D 85 ED
             float globalScale = *(float*)globalScaleAddress;
             *(float*)globalScaleAddress = 1;
             OnRequestedUpdateHook.Original(a, b, c);
@@ -825,7 +826,7 @@ namespace xivr
         [HandleAttribute("CamManagerSetMatrix", attribFnType.Initalize)]
         public void CamManagerSetMatrixInit(bool status)
         {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC ?? 48 8B D9 48 8B FA");
+            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("4C 8B DC 49 89 5B 10 49 89 73 18 49 89 7B 20 55 49 8D AB 48 FF FF FF");
             PluginLog.Log($"CamManagerSetMatrix: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             CamManagerSetMatrixHook = Hook<CamManagerSetMatrixDg>.FromAddress(tmpAddress, CamManagerSetMatrixFn);
         }
