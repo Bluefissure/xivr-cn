@@ -16,7 +16,7 @@ namespace xivr
 
             ImGui.SetNextWindowSize(new Vector2(200, 270) * ImGuiHelpers.GlobalScale, ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowSizeConstraints(new Vector2(200, 270) * ImGuiHelpers.GlobalScale, new Vector2(9999));
-            if (ImGui.Begin("Configuration", ref isVisible, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+            if (ImGui.Begin("XIVR 设置", ref isVisible, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
                 ImGui.BeginGroup();
                 bool vrEnabled = xivr.Configuration.isEnabled;
