@@ -530,7 +530,7 @@ namespace xivr
                     cmd->colorB = 0;
                     cmd->colorA = 0;
                     cmd->unkn1 = 1;
-                    PushbackFn((threadedOffset + 0x18), (UInt64)(*(int*)(threadedOffset + 0x8)), queueData);
+                    PushbackFn(threadedOffset, queueData);
                 }
             }
         }
@@ -690,7 +690,7 @@ namespace xivr
         //----
         // Pushback
         //---- BaseAddress + 0x1DF550
-        private delegate void PushbackDg(UInt64 a, UInt64 b, UInt64 c);
+        private delegate void PushbackDg(UInt64 a, UInt64 b);
         private PushbackDg PushbackFn;
 
         [HandleAttribute("Pushback", attribFnType.Initalize)]
@@ -784,9 +784,6 @@ namespace xivr
             OnRequestedUpdateHook.Original(a, b, c);
             *(float*)globalScaleAddress = globalScale;
         }
-
-
-
 
         //----
         // DXGIPresent
