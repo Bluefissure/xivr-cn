@@ -749,9 +749,6 @@ namespace xivr
         }
 
 
-        //----
-        // NEED TO FIX SIG
-        //----
         // AddonNamePlate OnRequestedUpdate
         //---- BaseAddress + 0xF2BC60
         private delegate void OnRequestedUpdateDg(UInt64 a, UInt64 b, UInt64 c);
@@ -828,9 +825,6 @@ namespace xivr
 
 
 
-        //----
-        // NEED TO FIX SIG
-        //----
         // CameraManager Setup??
         //---- BaseAddress + 0x464F30
         private delegate void CamManagerSetMatrixDg(UInt64 a);
@@ -862,9 +856,6 @@ namespace xivr
 
 
 
-        //----
-        // NEED TO FIX SIG
-        //----
         // CascadeShadow_UpdateConstantBuffer
         //---- BaseAddress + 0x354df0
         private delegate void CSUpdateConstBufDg(UInt64 a, UInt64 b);
