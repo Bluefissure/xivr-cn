@@ -1,4 +1,4 @@
-肥肥14 VR模组 for 国服 (XIVR for CN)
+肥肥14 VR模组 for 国服 (XIVR for CN)  
 ***警告 - 可能导致癫痫*** 
 **如果你有光敏性癫痫, 请勿游玩该模组. 当VR模式启用后桌面的游戏窗口画面会频繁闪烁.** (VR头显内不会闪烁.)
 
@@ -154,8 +154,8 @@ v0.0.0.3 released now the UI should no longer hide randomly, if you have downloa
 
 v0.0.0.4 released, "band aid edition" Fix cross-eyed world via `/xivr swapeyes` and ui via `/xivr swapeyesui`  If your normal (non vr) controller isnt working please try `/xivr motcontoggle`
 
-v0.0.5 experimental release
-Fixed floating UI scaling curvature bug
-Fixed shadow glitching at edge of vision
-Changes to loading order if it crashed previously please try this and report back
+v0.0.5 experimental release  
+Fixed floating UI scaling curvature bug  
+Fixed shadow glitching at edge of vision  
+Changes to loading order if it crashed previously please try this and report back  
 If started from the title screen settings will auto apply if started from the game please run `/xivr loadcon` after starting vr
