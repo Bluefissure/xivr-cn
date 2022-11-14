@@ -1,11 +1,12 @@
-***WARNING - SEIZURES*** 
-**If you are prone to epileptic seizures, DO NOT PLAY THIS MOD. Your desktop screen will flicker rapidly while VR is active.** (The in-headset view won't flicker.)
+肥肥14 VR模组 for 国服 (XIVR for CN)
+***警告 - 可能导致癫痫*** 
+**如果你有光敏性癫痫, 请勿游玩该模组. 当VR模式启用后桌面的游戏窗口画面会频繁闪烁.** (VR头显内不会闪烁.)
 
-*Throw wide the gates, that we may pass!*
+*时空之门由我操控!*
 
-**XIVR** is an open-source project that aims to add VR support to the critically acclaimed Japanese MMORPG which has an expanded free trial with no restrictions on playtime. This open-source mod is purely based on original code, and does not include any copyrighted materials. While, to our knowledge, the mod is undetectable and fully usable on live servers, using this mod is against the TOS. Use at your own risk; we are not liable for damages caused.
+**XIVR** 是一个开源项目, 目标是为广受好评的日本 MMORPG 增加VR支持, 其免费试玩时长不会有限制. 该开源模组仅调用游戏自带函数, 并不包含版权所有元素. 并且, 据我们了解, 该模组不会被检测并可以在正式服务器游玩, 使用该模组会违反用户许可协议. 请自行承担风险; 我们不会对可能造成的损伤负责.
 
-XIVR is currently in an **alpha state**. It will be released as a minimum viable product to gauge user interest and attract other developers interested in working with us. The code is open-source, and we are willing to merge in new features! If you're interested, please let us know!
+XIVR 当前还在 **Alpha阶段**. 该插件目前以最低可行状态公布, 用于吸引用户兴趣以及吸引更多的开发者来参与. 所有代码开源, 并且我们愿意合并新功能! 如果你感兴趣的话, 请联系我们!
 
 Notes: 
 
