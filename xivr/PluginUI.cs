@@ -48,14 +48,14 @@ namespace xivr
                 }
 
                 bool horizontalLock = xivr.Configuration.horizontalLock;
-                if (ImGui.Checkbox("水平自动靠近旋转", ref horizontalLock))
+                if (ImGui.Checkbox("锁定水平旋转", ref horizontalLock))
                 {
                     xivr.Configuration.horizontalLock = horizontalLock;
                     xivr.Configuration.Save();
                 }
 
                 bool verticalLock = xivr.Configuration.verticalLock;
-                if (ImGui.Checkbox("垂直自动靠近旋转", ref verticalLock))
+                if (ImGui.Checkbox("锁定垂直旋转", ref verticalLock))
                 {
                     xivr.Configuration.verticalLock = verticalLock;
                     xivr.Configuration.Save();

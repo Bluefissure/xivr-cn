@@ -873,7 +873,7 @@ namespace xivr
         [HandleAttribute("CSUpdateConstBuf", attribFnType.Initalize)]
         public void CSUpdateConstBufInit(bool status)
         {
-            IntPtr tmpAddress = (IntPtr)(BaseAddress + 0x354df0);// DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 4C 8B 2D ?? ?? ?? ?? 41 0F 28 C2");
+            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("4C 8B DC 49 89 5B 20 55 57 41 56 49 8D AB E8 FC FF FF");
             PluginLog.Log($"CSUpdateConstBuf: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
             CSUpdateConstBufHook = Hook<CSUpdateConstBufDg>.FromAddress(tmpAddress, CSUpdateConstBufFn);
         }
