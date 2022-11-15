@@ -273,7 +273,7 @@ namespace xivr
                     renderTargetManagerAddr = *(UInt64*)renderTargetManagerAddr;
                     renderTargetManager = (RenderTargetManager*)(*(UInt64*)renderTargetManagerAddr);
                 }
-                PluginLog.Log($"renderTargetManager: {*(UInt64*)renderTargetManagerAddr:X} {(*(UInt64*)renderTargetManagerAddr - BaseAddress):X}");
+                PluginLog.Log($"RenderTargetManager: {*(UInt64*)renderTargetManagerAddr:X} {(*(UInt64*)renderTargetManagerAddr - BaseAddress):X}");
 
                 IntPtr tmpAddress = DalamudApi.SigScanner.GetStaticAddressFromSig("48 8B 05 ?? ?? ?? ?? 83 78 50 00 75 22");
                 PluginLog.Log($"CameraManagerInstance: {*(UInt64*)tmpAddress:X} {(*(UInt64*)tmpAddress - BaseAddress):X}");
@@ -753,7 +753,7 @@ namespace xivr
         //---- BaseAddress + 0xF2BC60
         private delegate void OnRequestedUpdateDg(UInt64 a, UInt64 b, UInt64 c);
         private Hook<OnRequestedUpdateDg> OnRequestedUpdateHook;
-
+        ulong globalScaleAddress = 0;
 
         // 48 8B C4 41 56 48 81 EC ? ? ? ? 48 89 58 F0
         [HandleAttribute("OnRequestedUpdate", attribFnType.Initalize)]
@@ -761,6 +761,8 @@ namespace xivr
         {
             IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("48 8B C4 41 56 48 81 EC ?? ?? ?? ?? 48 89 58 F0");
             PluginLog.Log($"OnRequestedUpdate: {tmpAddress:X} {(UInt64)tmpAddress - BaseAddress:X}");
+            globalScaleAddress = (ulong) DalamudApi.SigScanner.GetStaticAddressFromSig("F3 44 0F 10 05 ?? ?? ?? ?? 4D 85 ED"); // F3 44 0F 10 05 ? ? ? ? 4D 85 ED
+            PluginLog.Log($"GlobalScale: {globalScaleAddress:X} {globalScaleAddress - BaseAddress:X}");
             OnRequestedUpdateHook = Hook<OnRequestedUpdateDg>.FromAddress(tmpAddress, OnRequestedUpdateFn);
         }
 
@@ -775,7 +777,7 @@ namespace xivr
 
         void OnRequestedUpdateFn(UInt64 a, UInt64 b, UInt64 c)
         {
-            UInt64 globalScaleAddress = (BaseAddress + 0x1F09AE8); // F3 44 0F 10 05 ? ? ? ? 4D 85 ED
+            // UInt64 globalScaleAddress = (BaseAddress + 0x1F09AE8); 
             float globalScale = *(float*)globalScaleAddress;
             *(float*)globalScaleAddress = 1;
             OnRequestedUpdateHook.Original(a, b, c);
