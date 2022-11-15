@@ -775,7 +775,7 @@ namespace xivr
 
         void OnRequestedUpdateFn(UInt64 a, UInt64 b, UInt64 c)
         {
-            UInt64 globalScaleAddress = (BaseAddress + 0x1F0BAF8); // F3 44 0F 10 05 ? ? ? ? 4D 85 ED
+            UInt64 globalScaleAddress = (BaseAddress + 0x1F09AE8); // F3 44 0F 10 05 ? ? ? ? 4D 85 ED
             float globalScale = *(float*)globalScaleAddress;
             *(float*)globalScaleAddress = 1;
             OnRequestedUpdateHook.Original(a, b, c);
