@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Dalamud;
 using Dalamud.Game;
+using Dalamud.Utility.Signatures;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Hooking;
@@ -23,28 +24,20 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace xivr
 {
-    public enum attribFnType
-    {
-        Initalize = 0,
-        Status = 1,
-    }
-
-    public delegate void HandleDelegte(bool status);
-    public delegate void HandleInputDelegte(InputAnalogActionData analog, InputDigitalActionData digital);
+    public delegate void HandleStatusDelegate(bool status);
+    public delegate void HandleInputDelegate(InputAnalogActionData analog, InputDigitalActionData digital);
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     public delegate void UpdateControllerInput(ActionButtonLayout buttonId, InputAnalogActionData analog, InputDigitalActionData digital);
 
 
     [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-    public sealed class HandleAttribute : System.Attribute
+    public sealed class HandleStatus : System.Attribute
     {
         public string fnName { get; private set; }
-        public attribFnType fnType { get; private set; }
-        public HandleAttribute(string name, attribFnType type)
+        public HandleStatus(string name)
         {
             fnName = name;
-            fnType = type;
         }
     }
 
@@ -67,8 +60,8 @@ namespace xivr
 
     internal unsafe class xivr_hooks
     {
-        protected Dictionary<string, HandleDelegte[]> functionList = new Dictionary<string, HandleDelegte[]>();
-        protected Dictionary<ActionButtonLayout, HandleInputDelegte> inputList = new Dictionary<ActionButtonLayout, HandleInputDelegte>();
+        protected Dictionary<string, HandleStatusDelegate> functionList = new Dictionary<string, HandleStatusDelegate>();
+        protected Dictionary<ActionButtonLayout, HandleInputDelegate> inputList = new Dictionary<ActionButtonLayout, HandleInputDelegate>();
 
         [DllImport("kernel32.dll")]
         private static extern bool VirtualProtectEx(IntPtr hProcess, IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
@@ -140,59 +133,86 @@ namespace xivr
             };
 
 
-        private const int FLAG_INVIS = (1 << 1) | (1 << 11);
-        private const byte NamePlateCount = 50;
-        private int curEye = 0;
-        private int[] swapEyes = { 1, 0 };
-        private bool doSwapEye = false;
-        private bool motioncontrol = true;
-        private UInt64 BaseAddress = 0;
-        private bool hooksSet = false;
         private bool initalized = false;
-        private int[] nextEye = { 1, 0 };
-        private GCHandle getThreadedDataHandle;
+        private bool hooksSet = false;
         private bool enableVR = true;
         private bool enableFloatingHUD = true;
         private bool forceFloatingScreen = false;
+        private bool doSwapEye = false;
+        private bool motioncontrol = true;
         private bool horizontalLock = false;
         private bool verticalLock = false;
         private bool horizonLock = false;
+        private bool doLocomotion = false;
+        private int gameMode = 0;
+        private int curEye = 0;
+        private int[] nextEye = { 1, 0 };
+        private int[] swapEyes = { 1, 0 };
+        private float RadianConversion = MathF.PI / 180.0f;
+        private float cameraZoom = 0.0f;
+        private float leftBumperValue = 0.0f;
         private Vector2 rotateAmount = new Vector2(0.0f, 0.0f);
         private Vector2 offsetAmount = new Vector2(0.0f, 0.0f);
         private Vector3 onwardAngle = new Vector3(0.0f, 0.0f, 0.0f);
         private Vector3 onwardDiff = new Vector3(0.0f, 0.0f, 0.0f);
         private Vector2 snapRotateAmount = new Vector2(0.0f, 0.0f);
-        private float cameraZoom = 0.0f;
-        private Stack<bool> overrideFromParent = new Stack<bool>();
-        private int[] runCount = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        private float RadianConversion = MathF.PI / 180.0f;
+        private Point virtualMouse = new Point(0, 0);
         private Dictionary<ActionButtonLayout, bool> inputState = new Dictionary<ActionButtonLayout, bool>();
-        private bool doLocomotion = false;
-        private int gameMode = 0;
+        private Dictionary<ConfigOption, int> SavedSettings = new Dictionary<ConfigOption, int>();
+        private Stack<bool> overrideFromParent = new Stack<bool>();
+
+        private const int FLAG_INVIS = (1 << 1) | (1 << 11);
+        private const byte NamePlateCount = 50;
+        private UInt64 BaseAddress = 0;
+        private UInt64 globalScaleAddress = 0;
+        private GCHandle getThreadedDataHandle;
+        private int[] runCount = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
         UpdateControllerInput controllerCallback;
 
-        Dictionary<ConfigOption, int> SavedSettings = new Dictionary<ConfigOption, int>();
 
-
+        Matrix4x4 curViewMatrix = Matrix4x4.Identity;
+        Matrix4x4 hmdMatrix = Matrix4x4.Identity;
+        Matrix4x4 lhcMatrix = Matrix4x4.Identity;
+        Matrix4x4 rhcMatrix = Matrix4x4.Identity;
         Matrix4x4 fixedProjection = Matrix4x4.Identity;
-
         Matrix4x4[] gameProjectionMatrix = {
                     Matrix4x4.Identity,
                     Matrix4x4.Identity
                 };
-
         Matrix4x4[] eyeOffsetMatrix = {
                     Matrix4x4.Identity,
                     Matrix4x4.Identity
                 };
 
-        Matrix4x4 curViewMatrix = Matrix4x4.Identity;
-
-        RenderTargetManager* renderTargetManager = null; //FFXIVClientStructs.FFXIV.Client.Graphics.Render.RenderTargetManager;
         CameraManagerInstance* camInst = null;
-        UInt64 renderTargetManagerAddr = 0;
 
+        private static class Signatures
+        {
+            internal const string CameraManagerInstance = "48 8B 05 ?? ?? ?? ?? 83 78 50 00 75 22";
+            internal const string GlobalScale = "F3 0F 10 0D ?? ?? ?? ?? F3 0F 10 40 4C";
+
+            internal const string DisableLeftClick = "E8 ?? ?? ?? ?? BA ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 84 C0 74 16";
+            internal const string DisableRightClick = "E8 ?? ?? ?? ?? 48 8B CE E8 ?? ?? ?? ?? 48 85 C0 74 1B";
+            internal const string SetRenderTarget = "E8 ?? ?? ?? ?? 40 38 BC 24 00 02 00 00";
+            internal const string AllocateQueueMemory = "E8 ?? ?? ?? ?? 48 85 C0 74 ?? C7 00 04 00 00 00";
+            internal const string Pushback = "E8 ?? ?? ?? ?? EB ?? 8B 87 6C 04 00 00";
+            internal const string PushbackUI = "E8 ?? ?? ?? ?? EB 05 E8 ?? ?? ?? ?? 48 8B 5C 24 78";
+            internal const string OnRequestedUpdate = "48 8B C4 41 56 48 81 EC ?? ?? ?? ?? 48 89 58 F0";
+            internal const string DXGIPresent = "E8 ?? ?? ?? ?? C6 47 79 00 48 8B 8F";
+            internal const string CamManagerSetMatrix = "4C 8B DC 49 89 5B 10 49 89 73 18 49 89 7B 20 55 49 8D AB";
+            internal const string CSUpdateConstBuf = "4C 8B DC 49 89 5B 20 55 57 41 56 49 8D AB";
+            internal const string SetUIProj = "E8 ?? ?? ?? ?? 8B 0D ?? ?? ?? ?? 48 8D 94 24";
+            internal const string CalculateViewMatrix = "E8 ?? ?? ?? ?? 8B 83 EC 00 00 00 D1 E8 A8 01 74 1B";
+            internal const string UpdateRotation = "E8 ?? ?? ?? ?? 0F B6 93 20 02 00 00 48 8B CB";
+            internal const string MakeProjectionMatrix2 = "E8 ?? ?? ?? ?? 4C 8B 2D ?? ?? ?? ?? 41 0F 28 C2";
+            internal const string CSMakeProjectionMatrix = "E8 ?? ?? ?? ?? 0F 28 46 10 4C 8D 7E 10";
+            internal const string RenderThreadSetRenderTarget = "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? F3 41 0F 10 5A 18";
+            internal const string NamePlateDraw = "0F B7 81 ?? ?? ?? ?? 4C 8B C1 66 C1 E0 06";
+            internal const string LoadCharacter = "48 89 5C 24 10 48 89 6C 24 18 56 57 41 57 48 83 EC 30 48 8B F9 4D 8B F9 8B CA 49 8B D8 8B EA";
+            internal const string GetAnalogueValue = "E8 ?? ?? ?? ?? 66 44 0F 6E C3";
+            internal const string ControllerInput = "E8 ?? ?? ?? ?? 41 8B 86 3C 04 00 00";
+        }
 
         public static void PrintEcho(string message) => DalamudApi.ChatGui.Print($"[xivr] {message}");
         public static void PrintError(string message) => DalamudApi.ChatGui.PrintError($"[xivr] {message}");
@@ -209,15 +229,13 @@ namespace xivr
             System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance;
             foreach (System.Reflection.MethodInfo method in this.GetType().GetMethods(flags))
             {
-                foreach (System.Attribute attribute in method.GetCustomAttributes(typeof(HandleAttribute), false))
+                foreach (System.Attribute attribute in method.GetCustomAttributes(typeof(HandleStatus), false))
                 {
-                    string key = ((HandleAttribute)attribute).fnName;
-                    attribFnType type = ((HandleAttribute)attribute).fnType;
-                    HandleDelegte handle = (HandleDelegte)HandleDelegte.CreateDelegate(typeof(HandleDelegte), this, method);
+                    string key = ((HandleStatus)attribute).fnName;
+                    HandleStatusDelegate handle = (HandleStatusDelegate)HandleStatusDelegate.CreateDelegate(typeof(HandleStatusDelegate), this, method);
 
                     if (!functionList.ContainsKey(key))
-                        functionList.Add(key, new HandleDelegte[2]);
-                    functionList[key][(int)type] = handle;
+                        functionList.Add(key, handle);
                 }
             }
         }
@@ -237,7 +255,7 @@ namespace xivr
                 foreach (System.Attribute attribute in method.GetCustomAttributes(typeof(HandleInputAttribute), false))
                 {
                     ActionButtonLayout key = ((HandleInputAttribute)attribute).inputId;
-                    HandleInputDelegte handle = (HandleInputDelegte)HandleInputDelegte.CreateDelegate(typeof(HandleInputDelegte), this, method);
+                    HandleInputDelegate handle = (HandleInputDelegate)HandleInputDelegate.CreateDelegate(typeof(HandleInputDelegate), this, method);
 
                     if (!inputList.ContainsKey(key))
                     {
@@ -248,47 +266,25 @@ namespace xivr
             }
         }
 
+
         public bool Initialize()
         {
             if (initalized == false)
             {
-                /*try
-                {
-                    // MY_PINVOKES class where P/Invokes are
-                    Marshal.PrelinkAll(typeof(xivr_hooks));
-                }
-                catch
-                {
-                    // Handle error, DLL or Method may not exist
-                }*/
-
-
+                SignatureHelper.Initialise(this);
 
                 BaseAddress = (UInt64)Process.GetCurrentProcess()?.MainModule?.BaseAddress;
                 PluginLog.Log($"Initialize {BaseAddress:X}");
 
-                renderTargetManagerAddr = (UInt64)DalamudApi.SigScanner.GetStaticAddressFromSig("48 8B 05 ?? ?? ?? ?? 49 63 C8");
-                if (renderTargetManagerAddr != 0)
-                {
-                    renderTargetManagerAddr = *(UInt64*)renderTargetManagerAddr;
-                    renderTargetManager = (RenderTargetManager*)(*(UInt64*)renderTargetManagerAddr);
-                }
-                PluginLog.Log($"RenderTargetManager: {*(UInt64*)renderTargetManagerAddr:X} {(*(UInt64*)renderTargetManagerAddr - BaseAddress):X}");
-
-                IntPtr tmpAddress = DalamudApi.SigScanner.GetStaticAddressFromSig("48 8B 05 ?? ?? ?? ?? 83 78 50 00 75 22");
+                IntPtr tmpAddress = DalamudApi.SigScanner.GetStaticAddressFromSig(Signatures.CameraManagerInstance);
                 PluginLog.Log($"CameraManagerInstance: {*(UInt64*)tmpAddress:X} {(*(UInt64*)tmpAddress - BaseAddress):X}");
                 camInst = (CameraManagerInstance*)(*(UInt64*)tmpAddress);
 
+                globalScaleAddress = (UInt64)DalamudApi.SigScanner.GetStaticAddressFromSig(Signatures.GlobalScale);
+
+                GetThreadedDataInit();
                 SetFunctionHandles();
                 SetInputHandles();
-
-                //----
-                // Initalize all sigs
-                //----
-                foreach (KeyValuePair<string, HandleDelegte[]> attrib in functionList)
-                {
-                    attrib.Value[(int)attribFnType.Initalize](false);
-                }
 
                 controllerCallback = (buttonId, analog, digital) =>
                 {
@@ -307,10 +303,9 @@ namespace xivr
         {
             if (initalized == true && hooksSet == false && VR_IsHmdPresent())
             {
-                PluginLog.Log($"VRInit {(IntPtr) Device.Instance():X}");
-                SetDX11((IntPtr) Device.Instance());
+                PluginLog.Log($"VRInit {(IntPtr)FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.Device.Instance():X}");
+                SetDX11((IntPtr)FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.Device.Instance());
 
-                //string filePath = DalamudApi.PluginInterface.AssemblyLocation.DirectoryName + "\\config\\actions.json";
                 string filePath = Path.Join(DalamudApi.PluginInterface.AssemblyLocation.DirectoryName, "config", "actions.json");
                 if (SetActiveJSON(filePath, filePath.Length) == false)
                 {
@@ -325,33 +320,11 @@ namespace xivr
                 Matrix4x4.Invert(GetFramePose(poseType.EyeOffset, 0), out eyeOffsetMatrix[0]);
                 Matrix4x4.Invert(GetFramePose(poseType.EyeOffset, 1), out eyeOffsetMatrix[1]);
 
-                //SavedSettings[ConfigOption.MoveMode] = ConfigModule.Instance()->GetIntValue(ConfigOption.MoveMode);
-                //SavedSettings[ConfigOption.ScreenMode] = ConfigModule.Instance()->GetIntValue(ConfigOption.ScreenMode);
-                //SavedSettings[ConfigOption.ScreenTop] = ConfigModule.Instance()->GetIntValue(ConfigOption.ScreenTop);
-                //SavedSettings[ConfigOption.ScreenLeft] = ConfigModule.Instance()->GetIntValue(ConfigOption.ScreenLeft);
-                //SavedSettings[ConfigOption.ScreenWidth] = ConfigModule.Instance()->GetIntValue(ConfigOption.ScreenWidth);
-                //SavedSettings[ConfigOption.ScreenHeight] = ConfigModule.Instance()->GetIntValue(ConfigOption.ScreenHeight);
-                //SavedSettings[ConfigOption.Fps] = ConfigModule.Instance()->GetIntValue(ConfigOption.Fps);
-                //SavedSettings[ConfigOption.Gamma] = ConfigModule.Instance()->GetIntValue(ConfigOption.Gamma);
-
-
-                //ConfigModule.Instance()->SetOption(ConfigOption.MoveMode, 1);
-                //ConfigModule.Instance()->SetOption(ConfigOption.ScreenMode, 0);
-                //ConfigModule.Instance()->SetOption(ConfigOption.ScreenTop, 0);
-                //ConfigModule.Instance()->SetOption(ConfigOption.ScreenLeft, 0);
-                //Point HMDSize = GetBufferSize();
-                //ConfigModule.Instance()->SetOption(ConfigOption.ScreenWidth, (HMDSize.X / 2));
-                //ConfigModule.Instance()->SetOption(ConfigOption.ScreenHeight, HMDSize.Y);
-                //ConfigModule.Instance()->SetOption(ConfigOption.Fps, 0);
-                //ConfigModule.Instance()->SetOption(ConfigOption.Gamma, 0);
-
                 //----
                 // Enable all hooks
                 //----
-                foreach (KeyValuePair<string, HandleDelegte[]> attrib in functionList)
-                {
-                    attrib.Value[(int)attribFnType.Status](true);
-                }
+                foreach (KeyValuePair<string, HandleStatusDelegate> attrib in functionList)
+                    attrib.Value(true);
 
                 snapRotateAmount.X = 45 * RadianConversion;
                 snapRotateAmount.Y = 15 * RadianConversion;
@@ -368,19 +341,8 @@ namespace xivr
                 //----
                 // Disable all hooks
                 //----
-                foreach (KeyValuePair<string, HandleDelegte[]> attrib in functionList)
-                {
-                    attrib.Value[(int)attribFnType.Status](false);
-                }
-
-                //ConfigModule.Instance()->SetOption(ConfigOption.MoveMode, SavedSettings[ConfigOption.MoveMode]);
-                //ConfigModule.Instance()->SetOption(ConfigOption.ScreenMode, SavedSettings[ConfigOption.ScreenMode]);
-                //ConfigModule.Instance()->SetOption(ConfigOption.ScreenTop, SavedSettings[ConfigOption.ScreenTop]);
-                //ConfigModule.Instance()->SetOption(ConfigOption.ScreenLeft, SavedSettings[ConfigOption.ScreenLeft]);
-                //ConfigModule.Instance()->SetOption(ConfigOption.ScreenWidth, SavedSettings[ConfigOption.ScreenWidth]);
-                //ConfigModule.Instance()->SetOption(ConfigOption.ScreenHeight, SavedSettings[ConfigOption.ScreenHeight]);
-                //ConfigModule.Instance()->SetOption(ConfigOption.Fps, SavedSettings[ConfigOption.Fps]);
-                //ConfigModule.Instance()->SetOption(ConfigOption.Gamma, SavedSettings[ConfigOption.Gamma]);
+                foreach (KeyValuePair<string, HandleStatusDelegate> attrib in functionList)
+                    attrib.Value(false);
 
                 gameProjectionMatrix[0] = Matrix4x4.Identity;
                 gameProjectionMatrix[1] = Matrix4x4.Identity;
@@ -394,13 +356,14 @@ namespace xivr
             }
         }
 
-        public int PlayerRedrawCount = 0;
-
         public void Update(Dalamud.Game.Framework framework_)
         {
             if (hooksSet)
             {
                 UpdateController(controllerCallback);
+                Matrix4x4.Invert(GetFramePose(poseType.hmdPosition, -1), out hmdMatrix);
+                lhcMatrix = GetFramePose(poseType.LeftHand, -1);
+                rhcMatrix = GetFramePose(poseType.RightHand, -1);
 
                 AtkUnitBase* CharSelectAddon = (AtkUnitBase*)DalamudApi.GameGui.GetAddonByName("_CharaSelectTitle", 1);
                 AtkUnitBase* CharMakeAddon = (AtkUnitBase*)DalamudApi.GameGui.GetAddonByName("_CharaMakeTitle", 1);
@@ -408,46 +371,9 @@ namespace xivr
                 if (CharSelectAddon == null && CharMakeAddon == null && DalamudApi.ClientState.LocalPlayer == null)
                     forceFloatingScreen = true;
 
-                /*
-                PlayerCharacter? player = DalamudApi.ClientState.LocalPlayer;
-                if (player != null)
-                {
-                    IntPtr playerBase = player.Address;
-                    *(int*)(playerBase + 0x104) = 8;
-
-                    if(PlayerRedrawCount == 3)
-                        *(int*)(playerBase + 0x104) |= FLAG_INVIS;
-                    else if(PlayerRedrawCount == 1)
-                        *(int*)(playerBase + 0x104) &= ~FLAG_INVIS;
-
-                    if (PlayerRedrawCount > 0)
-                    {
-                        PlayerRedrawCount--;
-
-                    }
-
-
-                    //byte[] customPlayer = player.Customize;
-                    //PluginLog.Log($"Custom {player.Address:X}");
-                    //for (int i = 0; i < 10; i++)
-                    //    PluginLog.Log($"{customPlayer[i]:X}");
-                    //Dalamud.Game.ClientState.Objects.Enums.CustomizeIndex
-
-                    if (camInst != null)
-                    {
-                        UInt64 camAddress = (camInst->CameraOffset + (camInst->CameraIndex * 8));
-                        if (camAddress > 0)
-                        {
-                            //((GameCamera*)camAddress)->CurrentHRotation = 0.0f;
-                        }
-                    }
-                }
-                */
-
                 curEye = nextEye[curEye];
                 SetFramePose();
             }
-
         }
 
         public void ForceFloatingScreen(bool forceFloating)
@@ -519,7 +445,7 @@ namespace xivr
             UInt64 threadedOffset = GetThreadedOffset();
             if (threadedOffset != 0)
             {
-                UInt64 queueData = AllocateQueueMemmoryFn(threadedOffset, 0x38);
+                UInt64 queueData = AllocateQueueMemmoryFn!(threadedOffset, 0x38);
                 if (queueData != 0)
                 {
                     stRenderQueueCommandClear* cmd = (stRenderQueueCommandClear*)queueData;
@@ -530,7 +456,7 @@ namespace xivr
                     cmd->colorB = 0;
                     cmd->colorA = 0;
                     cmd->unkn1 = 1;
-                    PushbackFn(threadedOffset, queueData);
+                    PushbackFn((threadedOffset + 0x18), (UInt64)(*(int*)(threadedOffset + 0x8)), queueData);
                 }
             }
         }
@@ -543,8 +469,7 @@ namespace xivr
         private delegate UInt64 GetThreadedDataDg();
         GetThreadedDataDg GetThreadedDataFn;
 
-        [HandleAttribute("GetThreadedData", attribFnType.Initalize)]
-        public void GetThreadedDataInit(bool status)
+        public void GetThreadedDataInit()
         {
             //----
             // Used to access gs:[00000058] until i can do it in c#
@@ -557,11 +482,6 @@ namespace xivr
                 return;
 
             GetThreadedDataFn = Marshal.GetDelegateForFunctionPointer<GetThreadedDataDg>(getThreadedDataHandle.AddrOfPinnedObject());
-        }
-
-        [HandleAttribute("GetThreadedData", attribFnType.Status)]
-        public void GetThreadedDataStatus(bool status)
-        {
         }
 
         private UInt64 GetThreadedOffset()
@@ -577,36 +497,81 @@ namespace xivr
             return threadedData;
         }
 
+        //----
+        // SetRenderTarget
+        //----
+        private delegate void SetRenderTargetDg(UInt64 a, UInt64 b, Structures.Texture** c, UInt64 d, UInt64 e, UInt64 f);
+        [Signature(Signatures.SetRenderTarget, Fallibility = Fallibility.Fallible)]
+        private SetRenderTargetDg? SetRenderTargetFn = null;
+
+        //----
+        // AllocateQueueMemory
+        //----
+        private delegate UInt64 AllocateQueueMemoryDg(UInt64 a, UInt64 b);
+        [Signature(Signatures.AllocateQueueMemory, Fallibility = Fallibility.Fallible)]
+        private AllocateQueueMemoryDg? AllocateQueueMemmoryFn = null;
+
+        //----
+        // Pushback
+        //----
+        private delegate void PushbackDg(UInt64 a, UInt64 b, UInt64 c);
+        [Signature(Signatures.Pushback, Fallibility = Fallibility.Fallible)]
+        private PushbackDg? PushbackFn = null;
+
+        //----
+        // PushbackUI
+        //----
+        private delegate void PushbackUIDg(UInt64 a, UInt64 b);
+        [Signature(Signatures.PushbackUI, DetourName = nameof(PushbackUIFn))]
+        private Hook<PushbackUIDg>? PushbackUIHook = null;
+
+        [HandleStatus("PushbackUI")]
+        public void PushbackUIStatus(bool status)
+        {
+            if (status == true)
+                PushbackUIHook?.Enable();
+            else
+                PushbackUIHook?.Disable();
+        }
+        private void PushbackUIFn(UInt64 a, UInt64 b)
+        {
+            Structures.Texture* texture = GetUIRenderTexture(curEye);
+            UInt64 threadedOffset = GetThreadedOffset();
+            SetRenderTargetFn!(threadedOffset, 1, &texture, 0, 0, 0);
+
+            //UInt64 tAddr = *(UInt64*)(renderTargetManagerAddr + rndrOffset);
+            //Structures.Texture* texture1 = (Structures.Texture*)(tAddr);
+            //SetRenderTargetFn(threadedOffset, 1, &texture1, 0, 0, 0);
+
+            AddClearCommand();
+
+            overrideFromParent.Push(true);
+            PushbackUIHook!.Original(a, b);
+            overrideFromParent.Pop();
+        }
 
 
 
 
         //----
         // DisableLeftClick
-        //---- BaseAddress + 0x4D8C70
+        //----
         private delegate void DisableLeftClickDg(void** a, byte* b, bool c);
-        private Hook<DisableLeftClickDg> DisableLeftClickHook;
+        [Signature(Signatures.DisableLeftClick, DetourName = nameof(DisableLeftClickFn))]
+        private readonly Hook<DisableLeftClickDg>? DisableLeftClickHook = null;
 
-        [HandleAttribute("DisableLeftClick", attribFnType.Initalize)]
-        public void DisableLeftClickInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? BA ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 84 C0 74 16");
-            PluginLog.Log($"DisableLeftClick: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            DisableLeftClickHook = Hook<DisableLeftClickDg>.FromAddress(tmpAddress, DisableLeftClickFn);
-        }
-
-        [HandleAttribute("DisableLeftClick", attribFnType.Status)]
+        [HandleStatus("DisableLeftClick")]
         public void DisableLeftClickStatus(bool status)
         {
             if (status == true)
-                DisableLeftClickHook.Enable();
+                DisableLeftClickHook?.Enable();
             else
-                DisableLeftClickHook.Disable();
+                DisableLeftClickHook?.Disable();
         }
 
         private void DisableLeftClickFn(void** a, byte* b, bool c)
         {
-            if (b != null && b == a[16]) DisableLeftClickHook.Original(a, b, c);
+            if (b != null && b == a[16]) DisableLeftClickHook!.Original(a, b, c);
         }
 
 
@@ -614,197 +579,69 @@ namespace xivr
 
         //----
         // DisableRightClick
-        //---- BaseAddress + 0x4D8A40
+        //----
         private delegate void DisableRightClickDg(void** a, byte* b, bool c);
-        private Hook<DisableRightClickDg> DisableRightClickHook;
+        [Signature(Signatures.DisableRightClick, DetourName = nameof(DisableRightClickFn))]
+        private Hook<DisableRightClickDg>? DisableRightClickHook = null;
 
-        [HandleAttribute("DisableRightClick", attribFnType.Initalize)]
-        public void DisableRightClickInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 48 8B CE E8 ?? ?? ?? ?? 48 85 C0 74 1B");
-            PluginLog.Log($"DisableRightClick: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            DisableRightClickHook = Hook<DisableRightClickDg>.FromAddress(tmpAddress, DisableRightClickFn);
-        }
-
-        [HandleAttribute("DisableRightClick", attribFnType.Status)]
+        [HandleStatus("DisableRightClick")]
         public void DisableRightClickStatus(bool status)
         {
             if (status == true)
-                DisableRightClickHook.Enable();
+                DisableRightClickHook?.Enable();
             else
-                DisableRightClickHook.Disable();
+                DisableRightClickHook?.Disable();
         }
 
         private void DisableRightClickFn(void** a, byte* b, bool c)
         {
-            if (b != null && b == a[16]) DisableRightClickHook.Original(a, b, c);
+            if (b != null && b == a[16]) DisableRightClickHook!.Original(a, b, c);
         }
 
 
 
 
         //----
-        // SetRenderTarget
-        //---- BaseAddress + 0x343390
-        private delegate void SetRenderTargetDg(UInt64 a, UInt64 b, Structures.Texture** c, UInt64 d, UInt64 e, UInt64 f);
-        private SetRenderTargetDg SetRenderTargetFn;
-
-        [HandleAttribute("SetRenderTarget", attribFnType.Initalize)]
-        public void SetRenderTargetInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 40 38 BC 24 00 02 00 00");
-            PluginLog.Log($"SetRenderTarget: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            SetRenderTargetFn = Marshal.GetDelegateForFunctionPointer<SetRenderTargetDg>(tmpAddress);
-        }
-
-        [HandleAttribute("SetRenderTarget", attribFnType.Status)]
-        public void SetRenderTargetStatus(bool status)
-        {
-        }
-
-
-
-
+        // AtkUnitBase OnRequestedUpdate
         //----
-        // AllocateQueueMemory
-        //---- BaseAddress + 0x1EAB10
-        private delegate UInt64 AllocateQueueMemoryDg(UInt64 a, UInt64 b);
-        private AllocateQueueMemoryDg AllocateQueueMemmoryFn;
-
-        [HandleAttribute("AllocateQueueMemory", attribFnType.Initalize)]
-        public void AllocateQueueMemoryInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 48 85 C0 74 ?? C7 00 04 00 00 00");
-            PluginLog.Log($"AllocateQueueMemmory: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            AllocateQueueMemmoryFn = Marshal.GetDelegateForFunctionPointer<AllocateQueueMemoryDg>(tmpAddress);
-        }
-
-        [HandleAttribute("AllocateQueueMemory", attribFnType.Status)]
-        public void AllocateQueueMemoryStatus(bool status)
-        {
-        }
-
-
-
-
-        //----
-        // Pushback
-        //---- BaseAddress + 0x1DF550
-        private delegate void PushbackDg(UInt64 a, UInt64 b);
-        private PushbackDg PushbackFn;
-
-        [HandleAttribute("Pushback", attribFnType.Initalize)]
-        public void PushbackInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? EB ?? 8B 87 6C 04 00 00");
-            PluginLog.Log($"Pushback: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            PushbackFn = Marshal.GetDelegateForFunctionPointer<PushbackDg>(tmpAddress);
-        }
-
-        [HandleAttribute("Pushback", attribFnType.Status)]
-        public void PushbackStatus(bool status)
-        {
-        }
-
-
-
-
-        //----
-        // PushbackUI
-        //---- BaseAddress + 0x577ED0
-        private delegate void PushbackUIDg(UInt64 a, UInt64 b);
-        private Hook<PushbackUIDg> PushbackUIHook;
-
-        [HandleAttribute("PushbackUI", attribFnType.Initalize)]
-        public void PushbackUIInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? EB 05 E8 ?? ?? ?? ?? 48 8B 5C 24 78");
-            PluginLog.Log($"PushbackUI: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            PushbackUIHook = Hook<PushbackUIDg>.FromAddress(tmpAddress, PushbackUIFn);
-        }
-
-        [HandleAttribute("PushbackUI", attribFnType.Status)]
-        public void PushbackUIStatus(bool status)
-        {
-            if (status == true)
-                PushbackUIHook.Enable();
-            else
-                PushbackUIHook.Disable();
-        }
-        private void PushbackUIFn(UInt64 a, UInt64 b)
-        {
-            Structures.Texture* texture = GetUIRenderTexture(curEye);
-            UInt64 threadedOffset = GetThreadedOffset();
-            SetRenderTargetFn(threadedOffset, 1, &texture, 0, 0, 0);
-
-            //UInt64 tAddr = *(UInt64*)(renderTargetManagerAddr + rndrOffset);
-            //Structures.Texture* texture1 = (Structures.Texture*)(tAddr);
-            //SetRenderTargetFn(threadedOffset, 1, &texture1, 0, 0, 0);
-
-            AddClearCommand(); // TODO Analyze E8 ? ? ? ? 48 85 C0 74 ? C7 00 ? ? ? ? 48 8B D0 48 8B CB 48 89 70 08 89 68 10
-
-            overrideFromParent.Push(true);
-            PushbackUIHook.Original(a, b);
-            overrideFromParent.Pop();
-        }
-
-
-        // AddonNamePlate OnRequestedUpdate
-        //---- BaseAddress + 0xF2BC60
         private delegate void OnRequestedUpdateDg(UInt64 a, UInt64 b, UInt64 c);
-        private Hook<OnRequestedUpdateDg> OnRequestedUpdateHook;
-        ulong globalScaleAddress = 0;
+        [Signature(Signatures.OnRequestedUpdate, DetourName = nameof(OnRequestedUpdateFn))]
+        private Hook<OnRequestedUpdateDg>? OnRequestedUpdateHook { get; set; } = null;
 
-        // 48 8B C4 41 56 48 81 EC ? ? ? ? 48 89 58 F0
-        [HandleAttribute("OnRequestedUpdate", attribFnType.Initalize)]
-        public void OnRequestedUpdateInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("48 8B C4 41 56 48 81 EC ?? ?? ?? ?? 48 89 58 F0");
-            PluginLog.Log($"OnRequestedUpdate: {tmpAddress:X} {(UInt64)tmpAddress - BaseAddress:X}");
-            globalScaleAddress = (ulong) DalamudApi.SigScanner.GetStaticAddressFromSig("F3 44 0F 10 05 ?? ?? ?? ?? 4D 85 ED"); // F3 44 0F 10 05 ? ? ? ? 4D 85 ED
-            PluginLog.Log($"GlobalScale: {globalScaleAddress:X} {globalScaleAddress - BaseAddress:X}");
-            OnRequestedUpdateHook = Hook<OnRequestedUpdateDg>.FromAddress(tmpAddress, OnRequestedUpdateFn);
-        }
-
-        [HandleAttribute("OnRequestedUpdate", attribFnType.Status)]
+        [HandleStatus("OnRequestedUpdate")]
         public void OnRequestedUpdateStatus(bool status)
         {
             if (status == true)
-                OnRequestedUpdateHook.Enable();
+                OnRequestedUpdateHook?.Enable();
             else
-                OnRequestedUpdateHook.Disable();
+                OnRequestedUpdateHook?.Disable();
         }
 
         void OnRequestedUpdateFn(UInt64 a, UInt64 b, UInt64 c)
         {
-            // UInt64 globalScaleAddress = (BaseAddress + 0x1F09AE8); 
             float globalScale = *(float*)globalScaleAddress;
             *(float*)globalScaleAddress = 1;
-            OnRequestedUpdateHook.Original(a, b, c);
+            OnRequestedUpdateHook!.Original(a, b, c);
             *(float*)globalScaleAddress = globalScale;
         }
 
+
+
+
         //----
         // DXGIPresent
-        //---- BaseAddress + 0x32BFA0
+        //----
         private delegate void DXGIPresentDg(UInt64 a, UInt64 b);
-        private Hook<DXGIPresentDg> DXGIPresentHook;
+        [Signature(Signatures.DXGIPresent, DetourName = nameof(DXGIPresentFn))]
+        private Hook<DXGIPresentDg>? DXGIPresentHook = null;
 
-        [HandleAttribute("DXGIPresent", attribFnType.Initalize)]
-        public void DXGIPresentInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? C6 43 61 ?? 48 8B 8B E0 01 00 00");
-            PluginLog.Log($"DXGIPresent: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            DXGIPresentHook = Hook<DXGIPresentDg>.FromAddress(tmpAddress, DXGIPresentFn);
-        }
-
-        [HandleAttribute("DXGIPresent", attribFnType.Status)]
+        [HandleStatus("DXGIPresent")]
         public void DXGIPresentStatus(bool status)
         {
             if (status == true)
-                DXGIPresentHook.Enable();
+                DXGIPresentHook?.Enable();
             else
-                DXGIPresentHook.Disable();
+                DXGIPresentHook?.Disable();
         }
 
         private void DXGIPresentFn(UInt64 a, UInt64 b)
@@ -812,14 +649,14 @@ namespace xivr
             if (forceFloatingScreen)
             {
                 RenderUI(false, false);
-                DXGIPresentHook.Original(a, b);
+                DXGIPresentHook!.Original(a, b);
                 RenderFloatingScreen();
                 RenderVR();
             }
             else
             {
                 RenderUI(enableVR, enableFloatingHUD);
-                DXGIPresentHook.Original(a, b);
+                DXGIPresentHook!.Original(a, b);
                 SetTexture();
                 RenderVR();
             }
@@ -827,63 +664,51 @@ namespace xivr
 
 
 
+        //----
         // CameraManager Setup??
-        //---- BaseAddress + 0x464F30
+        //----
         private delegate void CamManagerSetMatrixDg(UInt64 a);
-        private Hook<CamManagerSetMatrixDg> CamManagerSetMatrixHook;
+        [Signature(Signatures.CamManagerSetMatrix, DetourName = nameof(CamManagerSetMatrixFn))]
+        private Hook<CamManagerSetMatrixDg>? CamManagerSetMatrixHook = null;
 
-        [HandleAttribute("CamManagerSetMatrix", attribFnType.Initalize)]
-        public void CamManagerSetMatrixInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("4C 8B DC 49 89 5B 10 49 89 73 18 49 89 7B 20 55 49 8D AB 48 FF FF FF");
-            PluginLog.Log($"CamManagerSetMatrix: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            CamManagerSetMatrixHook = Hook<CamManagerSetMatrixDg>.FromAddress(tmpAddress, CamManagerSetMatrixFn);
-        }
-
-        [HandleAttribute("CamManagerSetMatrix", attribFnType.Status)]
+        [HandleStatus("CamManagerSetMatrix")]
         public void CamManagerSetMatrixStatus(bool status)
         {
             if (status == true)
-                CamManagerSetMatrixHook.Enable();
+                CamManagerSetMatrixHook?.Enable();
             else
-                CamManagerSetMatrixHook.Disable();
+                CamManagerSetMatrixHook?.Disable();
         }
 
         private void CamManagerSetMatrixFn(UInt64 a)
         {
             overrideFromParent.Push(true);
-            CamManagerSetMatrixHook.Original(a);
+            CamManagerSetMatrixHook!.Original(a);
             overrideFromParent.Pop();
         }
 
 
 
+        //----
         // CascadeShadow_UpdateConstantBuffer
-        //---- BaseAddress + 0x354df0
+        //----
         private delegate void CSUpdateConstBufDg(UInt64 a, UInt64 b);
-        private Hook<CSUpdateConstBufDg> CSUpdateConstBufHook;
+        [Signature(Signatures.CSUpdateConstBuf, DetourName = nameof(CSUpdateConstBufFn))]
+        private Hook<CSUpdateConstBufDg>? CSUpdateConstBufHook = null;
 
-        [HandleAttribute("CSUpdateConstBuf", attribFnType.Initalize)]
-        public void CSUpdateConstBufInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("4C 8B DC 49 89 5B 20 55 57 41 56 49 8D AB E8 FC FF FF");
-            PluginLog.Log($"CSUpdateConstBuf: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            CSUpdateConstBufHook = Hook<CSUpdateConstBufDg>.FromAddress(tmpAddress, CSUpdateConstBufFn);
-        }
-
-        [HandleAttribute("CSUpdateConstBuf", attribFnType.Status)]
+        [HandleStatus("CSUpdateConstBuf")]
         public void CSUpdateConstBufStatus(bool status)
         {
             if (status == true)
-                CSUpdateConstBufHook.Enable();
+                CSUpdateConstBufHook?.Enable();
             else
-                CSUpdateConstBufHook.Disable();
+                CSUpdateConstBufHook?.Disable();
         }
 
         private void CSUpdateConstBufFn(UInt64 a, UInt64 b)
         {
             overrideFromParent.Push(true);
-            CSUpdateConstBufHook.Original(a, b);
+            CSUpdateConstBufHook!.Original(a, b);
             overrideFromParent.Pop();
         }
 
@@ -891,25 +716,18 @@ namespace xivr
 
         //----
         // SetUIProj
-        //---- BaseAddress + 0x4E9300
+        //----
         private delegate void SetUIProjDg(UInt64 a, UInt64 b);
-        private Hook<SetUIProjDg> SetUIProjHook;
+        [Signature(Signatures.SetUIProj, DetourName = nameof(SetUIProjFn))]
+        private Hook<SetUIProjDg>? SetUIProjHook = null;
 
-        [HandleAttribute("SetUIProj", attribFnType.Initalize)]
-        public void SetUIProjInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 8B 0D ?? ?? ?? ?? 48 8D 94 24");
-            PluginLog.Log($"SetUIProj: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            SetUIProjHook = Hook<SetUIProjDg>.FromAddress(tmpAddress, SetUIProjFn);
-        }
-
-        [HandleAttribute("SetUIProj", attribFnType.Status)]
+        [HandleStatus("SetUIProj")]
         public void SetUIProjStatus(bool status)
         {
             if (status == true)
-                SetUIProjHook.Enable();
+                SetUIProjHook?.Enable();
             else
-                SetUIProjHook.Disable();
+                SetUIProjHook?.Disable();
         }
 
         private void SetUIProjFn(UInt64 a, UInt64 b)
@@ -919,51 +737,42 @@ namespace xivr
             {
                 Structures.Texture* texture = GetUIRenderTexture(curEye);
                 UInt64 threadedOffset = GetThreadedOffset();
-                SetRenderTargetFn(threadedOffset, 1, &texture, 0, 0, 0);
+                SetRenderTargetFn!(threadedOffset, 1, &texture, 0, 0, 0);
             }
 
-            SetUIProjHook.Original(a, b);
+            SetUIProjHook!.Original(a, b);
         }
+
 
 
 
 
         //----
         // Camera CalculateViewMatrix
-        //---- BaseAddress + 0x464330
+        //----
         private delegate void CalculateViewMatrixDg(UInt64 a);
-        private Hook<CalculateViewMatrixDg> CalculateViewMatrixHook;
+        [Signature(Signatures.CalculateViewMatrix, DetourName = nameof(CalculateViewMatrixFn))]
+        private Hook<CalculateViewMatrixDg>? CalculateViewMatrixHook = null;
 
-        [HandleAttribute("CalculateViewMatrix", attribFnType.Initalize)]
-        public void CalculateViewMatrixInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 8B 83 EC 00 00 00 D1 ?? A8 ?? 74 ?? 48 8B 05 ?? ?? ?? ?? 4C 8B 83 E0 00 00 00");
-            PluginLog.Log($"CalculateViewMatrix: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            CalculateViewMatrixHook = Hook<CalculateViewMatrixDg>.FromAddress(tmpAddress, CalculateViewMatrixFn);
-        }
-
-        [HandleAttribute("CalculateViewMatrix", attribFnType.Status)]
+        [HandleStatus("CalculateViewMatrix")]
         public void CalculateViewMatrixStatus(bool status)
         {
             if (status == true)
-                CalculateViewMatrixHook.Enable();
+                CalculateViewMatrixHook?.Enable();
             else
-                CalculateViewMatrixHook.Disable();
+                CalculateViewMatrixHook?.Disable();
         }
-        
+
         private void CalculateViewMatrixFn(UInt64 a)
         {
             IntPtr gameViewMatrixAddr = (IntPtr)(a + 0xA0);
             SafeMemory.Write<Matrix4x4>(gameViewMatrixAddr, Matrix4x4.Identity);
-            CalculateViewMatrixHook.Original(a);
+            CalculateViewMatrixHook!.Original(a);
             SafeMemory.Read<Matrix4x4>(gameViewMatrixAddr, out curViewMatrix);
 
             if (enableVR && enableFloatingHUD && forceFloatingScreen == false)
             {
                 Matrix4x4 gameViewMatrix = new Matrix4x4();
-                Matrix4x4 hmdMatrix = GetFramePose(poseType.hmdPosition, -1);
-                Matrix4x4.Invert(hmdMatrix, out hmdMatrix);
-
                 Matrix4x4 horizonLockMatrix = Matrix4x4.Identity;
                 if (camInst != null && horizonLock)
                 {
@@ -977,8 +786,6 @@ namespace xivr
                 horizonLockMatrix.M42 = offsetAmount.Y;
 
                 Matrix4x4 invGameViewMatrixAddr;
-                Matrix4x4 lhcMatrix = GetFramePose(poseType.LeftHand, -1);
-                
                 Vector3 angles = GetAngles(lhcMatrix);
                 Matrix4x4 revOnward = Matrix4x4.CreateFromAxisAngle(new Vector3(0, 1, 0), -angles.Y);
                 Matrix4x4 zoom = Matrix4x4.CreateTranslation(0, 0, -cameraZoom);
@@ -992,7 +799,7 @@ namespace xivr
                     hmdMatrix = hmdMatrix * eyeOffsetMatrix[swapEyes[curEye]];
                 else
                     hmdMatrix = hmdMatrix * eyeOffsetMatrix[curEye];
-                
+
                 SafeMemory.Read<Matrix4x4>(gameViewMatrixAddr, out gameViewMatrix);
                 gameViewMatrix = gameViewMatrix * horizonLockMatrix * revOnward * hmdMatrix;
                 SafeMemory.Write<Matrix4x4>(gameViewMatrixAddr, gameViewMatrix);
@@ -1004,25 +811,18 @@ namespace xivr
 
         //----
         // Camera UpdateRotation
-        //---- BaseAddress + 0x1275B80
+        //----
         private delegate void UpdateRotationDg(UInt64 a);
-        private Hook<UpdateRotationDg> UpdateRotationHook;
+        [Signature(Signatures.UpdateRotation, DetourName = nameof(UpdateRotationFn))]
+        private Hook<UpdateRotationDg>? UpdateRotationHook = null;
 
-        [HandleAttribute("UpdateRotation", attribFnType.Initalize)]
-        public void UpdateRotationInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 0F B6 93 14 02 00 00");
-            PluginLog.Log($"UpdateRotation: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            UpdateRotationHook = Hook<UpdateRotationDg>.FromAddress(tmpAddress, UpdateRotationFn);
-        }
-
-        [HandleAttribute("UpdateRotation", attribFnType.Status)]
+        [HandleStatus("UpdateRotation")]
         public void UpdateRotationStatus(bool status)
         {
             if (status == true)
-                UpdateRotationHook.Enable();
+                UpdateRotationHook?.Enable();
             else
-                UpdateRotationHook.Disable();
+                UpdateRotationHook?.Disable();
         }
 
         private void UpdateRotationFn(UInt64 a)
@@ -1031,15 +831,12 @@ namespace xivr
             if (gameCamera != null && forceFloatingScreen == false)
             {
                 gameMode = gameCamera->Mode;
-
-                Matrix4x4 lhcMatrix = GetFramePose(poseType.LeftHand, -1);
-                //Matrix4x4.Invert(lhcMatrix, out lhcMatrix);
                 Vector3 angles = GetAngles(lhcMatrix);
                 angles.Y *= -1;
 
                 onwardDiff = angles - onwardAngle;
                 onwardAngle = angles;
-                
+
                 if (horizontalLock)
                     gameCamera->HRotationThisFrame2 = 0;
                 if (verticalLock)
@@ -1058,11 +855,11 @@ namespace xivr
                 rotateAmount.Y = 0;
 
                 cameraZoom = gameCamera->CurrentZoom;
-                UpdateRotationHook.Original(a);
+                UpdateRotationHook!.Original(a);
             }
             else
             {
-                UpdateRotationHook.Original(a);
+                UpdateRotationHook!.Original(a);
             }
         }
 
@@ -1071,34 +868,27 @@ namespace xivr
 
         //----
         // MakeProjectionMatrix2
-        //---- BaseAddress + 0x1F1A40
+        //----
         private delegate float* MakeProjectionMatrix2Dg(UInt64 a, float b, float c, float d, float e);
-        private Hook<MakeProjectionMatrix2Dg> MakeProjectionMatrix2Hook;
+        [Signature(Signatures.MakeProjectionMatrix2, DetourName = nameof(MakeProjectionMatrix2Fn))]
+        private Hook<MakeProjectionMatrix2Dg>? MakeProjectionMatrix2Hook = null;
 
-        [HandleAttribute("MakeProjectionMatrix2", attribFnType.Initalize)]
-        public void MakeProjectionMatrix2Init(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 4C 8B 3D ?? ?? ?? ?? 41 0F 28 C1");
-            PluginLog.Log($"MakeProjectionMatrix2: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            MakeProjectionMatrix2Hook = Hook<MakeProjectionMatrix2Dg>.FromAddress(tmpAddress, MakeProjectionMatrix2Fn);
-        }
-
-        [HandleAttribute("MakeProjectionMatrix2", attribFnType.Status)]
+        [HandleStatus("MakeProjectionMatrix2")]
         public void MakeProjectionMatrix2Status(bool status)
         {
             if (status == true)
-                MakeProjectionMatrix2Hook.Enable();
+                MakeProjectionMatrix2Hook?.Enable();
             else
-                MakeProjectionMatrix2Hook.Disable();
+                MakeProjectionMatrix2Hook?.Disable();
         }
 
         private float* MakeProjectionMatrix2Fn(UInt64 a, float b, float c, float d, float e)
         {
             bool overrideMatrix = (overrideFromParent.Count == 0) ? false : overrideFromParent.Peek();
-            float* retVal = MakeProjectionMatrix2Hook.Original(a, b, c, d, e);
+            float* retVal = MakeProjectionMatrix2Hook!.Original(a, b, c, d, e);
             if (enableVR && enableFloatingHUD && overrideMatrix && forceFloatingScreen == false)
             {
-                if(doSwapEye)
+                if (doSwapEye)
                 {
                     SafeMemory.Read<float>((IntPtr)(a + 0x38), out gameProjectionMatrix[swapEyes[curEye]].M43);
                     SafeMemory.Write<Matrix4x4>((IntPtr)retVal, gameProjectionMatrix[swapEyes[curEye]]);
@@ -1118,23 +908,16 @@ namespace xivr
         // CascadeShadow MakeProjectionMatrix
         //---- BaseAddress + 0x1f1b00
         private delegate float* CSMakeProjectionMatrixDg(UInt64 a, float b, float c, float d, float e);
-        private Hook<CSMakeProjectionMatrixDg> CSMakeProjectionMatrixHook;
+        [Signature(Signatures.CSMakeProjectionMatrix, DetourName = nameof(CSMakeProjectionMatrixFn))]
+        private Hook<CSMakeProjectionMatrixDg>? CSMakeProjectionMatrixHook = null;
 
-        [HandleAttribute("CSMakeProjectionMatrix", attribFnType.Initalize)]
-        public void CSMakeProjectionMatrixInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 0F 28 46 10 4C 8D 7E 10");
-            PluginLog.Log($"CSMakeProjectionMatrix: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            CSMakeProjectionMatrixHook = Hook<CSMakeProjectionMatrixDg>.FromAddress(tmpAddress, CSMakeProjectionMatrixFn);
-        }
-
-        [HandleAttribute("CSMakeProjectionMatrix", attribFnType.Status)]
+        [HandleStatus("CSMakeProjectionMatrix")]
         public void CSMakeProjectionMatrixStatus(bool status)
         {
             if (status == true)
-                CSMakeProjectionMatrixHook.Enable();
+                CSMakeProjectionMatrixHook?.Enable();
             else
-                CSMakeProjectionMatrixHook.Disable();
+                CSMakeProjectionMatrixHook?.Disable();
         }
 
         private float* CSMakeProjectionMatrixFn(UInt64 a, float b, float c, float d, float e)
@@ -1144,7 +927,7 @@ namespace xivr
             {
                 b = 2.0f;
             }
-            float* retVal = CSMakeProjectionMatrixHook.Original(a, b, c, d, e);
+            float* retVal = CSMakeProjectionMatrixHook!.Original(a, b, c, d, e);
             return retVal;
         }
 
@@ -1154,23 +937,16 @@ namespace xivr
         // RenderThreadSetRenderTarget
         //---- BaseAddress + 0x337830
         private delegate void RenderThreadSetRenderTargetDg(UInt64 a, UInt64 b);
-        private Hook<RenderThreadSetRenderTargetDg> RenderThreadSetRenderTargetHook;
+        [Signature(Signatures.RenderThreadSetRenderTarget, DetourName = nameof(RenderThreadSetRenderTargetFn))]
+        private Hook<RenderThreadSetRenderTargetDg>? RenderThreadSetRenderTargetHook = null;
 
-        [HandleAttribute("RenderThreadSetRenderTarget", attribFnType.Initalize)]
-        public void RenderThreadSetRenderTargetInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? F3 41 0F 10 5A 18");
-            PluginLog.Log($"RenderThreadSetRenderTarget: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            RenderThreadSetRenderTargetHook = Hook<RenderThreadSetRenderTargetDg>.FromAddress(tmpAddress, RenderThreadSetRenderTargetFn);
-        }
-
-        [HandleAttribute("RenderThreadSetRenderTarget", attribFnType.Status)]
+        [HandleStatus("RenderThreadSetRenderTarget")]
         public void RenderThreadSetRenderTargetStatus(bool status)
         {
             if (status == true)
-                RenderThreadSetRenderTargetHook.Enable();
+                RenderThreadSetRenderTargetHook?.Enable();
             else
-                RenderThreadSetRenderTargetHook.Disable();
+                RenderThreadSetRenderTargetHook?.Disable();
         }
 
         private void RenderThreadSetRenderTargetFn(UInt64 a, UInt64 b)
@@ -1183,7 +959,7 @@ namespace xivr
                 else if (rendTrg->uk5 == 0x990F0F0F)
                     SetThreadedEye(1);
             }
-            RenderThreadSetRenderTargetHook.Original(a, b);
+            RenderThreadSetRenderTargetHook!.Original(a, b);
         }
 
 
@@ -1193,23 +969,16 @@ namespace xivr
         // NamePlateDraw
         //---- BaseAddress + 0xF29D30
         private delegate void NamePlateDrawDg(AddonNamePlate* a);
-        private Hook<NamePlateDrawDg> NamePlateDrawHook;
+        [Signature(Signatures.NamePlateDraw, DetourName = nameof(NamePlateDrawFn))]
+        private Hook<NamePlateDrawDg>? NamePlateDrawHook = null;
 
-        [HandleAttribute("NamePlateDraw", attribFnType.Initalize)]
-        public void NamePlateDrawInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("0F B7 81 ?? ?? ?? ?? 4C 8B C1 66 C1 E0 06");
-            PluginLog.Log($"NamePlateDraw: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            NamePlateDrawHook = Hook<NamePlateDrawDg>.FromAddress(tmpAddress, NamePlateDrawFn);
-        }
-
-        [HandleAttribute("NamePlateDraw", attribFnType.Status)]
+        [HandleStatus("NamePlateDraw")]
         public void NamePlateDrawStatus(bool status)
         {
             if (status == true)
-                NamePlateDrawHook.Enable();
+                NamePlateDrawHook?.Enable();
             else
-                NamePlateDrawHook.Disable();
+                NamePlateDrawHook?.Disable();
         }
 
         private void NamePlateDrawFn(AddonNamePlate* a)
@@ -1241,7 +1010,7 @@ namespace xivr
                 }
             }
 
-            NamePlateDrawHook.Original(a);
+            NamePlateDrawHook!.Original(a);
         }
 
 
@@ -1251,24 +1020,16 @@ namespace xivr
         // LoadCharacter
         //---- BaseAddress + 0x72FF80
         private delegate UInt64 LoadCharacterDg(UInt64 a, UInt64 b, UInt64 c, UInt64 d, UInt64 e, UInt64 f);
-        private Hook<LoadCharacterDg> LoadCharacterHook;
+        [Signature(Signatures.LoadCharacter, DetourName = nameof(LoadCharacterFn))]
+        private Hook<LoadCharacterDg>? LoadCharacterHook = null;
 
-        [HandleAttribute("LoadCharacter", attribFnType.Initalize)]
-        public void LoadCharacterInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("48 89 5C 24 10 48 89 6C 24 18 56 57 41 57 48 83 EC 30 48 8B F9 4D 8B F9 8B CA 49 8B D8 8B EA");
-            PluginLog.Log($"LoadCharacter: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            //LoadCharacterFn = Marshal.GetDelegateForFunctionPointer<LoadCharacterDg>(LoadCharacterAddr);
-            LoadCharacterHook = Hook<LoadCharacterDg>.FromAddress(tmpAddress, LoadCharacterFn);
-        }
-
-        [HandleAttribute("LoadCharacter", attribFnType.Status)]
+        [HandleStatus("LoadCharacter")]
         public void LoadCharacterStatus(bool status)
         {
             if (status == true)
-                LoadCharacterHook.Enable();
+                LoadCharacterHook?.Enable();
             else
-                LoadCharacterHook.Disable();
+                LoadCharacterHook?.Disable();
         }
 
         private UInt64 LoadCharacterFn(UInt64 a, UInt64 b, UInt64 c, UInt64 d, UInt64 e, UInt64 f)
@@ -1298,7 +1059,7 @@ namespace xivr
                 //*(byte*)(d + 0 + 2) = 255;
             }
             //PluginLog.Log($"LoadCharacter {a:X} {b:X} {c:X} {d:X} {e:X} {f:X}");
-            return LoadCharacterHook.Original(a, b, c, d, e, f);
+            return LoadCharacterHook!.Original(a, b, c, d, e, f);
         }
 
 
@@ -1309,23 +1070,16 @@ namespace xivr
         // Input.GetAnalogueValue
         //---- BaseAddress + 0x4E37F0
         private delegate Int32 GetAnalogueValueDg(UInt64 a, UInt64 b);
-        private Hook<GetAnalogueValueDg> GetAnalogueValueHook;
+        [Signature(Signatures.GetAnalogueValue, DetourName = nameof(GetAnalogueValueFn))]
+        private Hook<GetAnalogueValueDg>? GetAnalogueValueHook = null;
 
-        [HandleAttribute("GetAnalogueValue", attribFnType.Initalize)]
-        public void GetAnalogueValueInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 66 44 0F 6E C3");
-            PluginLog.Log($"GetAnalogueValue: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            GetAnalogueValueHook = Hook<GetAnalogueValueDg>.FromAddress(tmpAddress, GetAnalogueValueFn);
-        }
-
-        [HandleAttribute("GetAnalogueValue", attribFnType.Status)]
+        [HandleStatus("GetAnalogueValue")]
         public void GetAnalogueValueStatus(bool status)
         {
             if (status == true)
-                GetAnalogueValueHook.Enable();
+                GetAnalogueValueHook?.Enable();
             else
-                GetAnalogueValueHook.Disable();
+                GetAnalogueValueHook?.Disable();
         }
 
 
@@ -1339,7 +1093,7 @@ namespace xivr
 
         private Int32 GetAnalogueValueFn(UInt64 a, UInt64 b)
         {
-            Int32 retVal = GetAnalogueValueHook.Original(a, b);
+            Int32 retVal = GetAnalogueValueHook!.Original(a, b);
 
             if (enableVR)
             {
@@ -1356,7 +1110,7 @@ namespace xivr
                     case 5:
                         //PluginLog.Log($"GetAnalogueValueFn: {retVal}");
                         if (MathF.Abs(retVal) >= 0 && MathF.Abs(retVal) < 15) rightHorizontalCenter = true;
-                        if (horizontalLock)
+                        if (horizontalLock && MathF.Abs(leftBumperValue) < 0.5)
                         {
                             if (MathF.Abs(retVal) > 75 && rightHorizontalCenter)
                             {
@@ -1369,7 +1123,7 @@ namespace xivr
                     case 6:
                         //PluginLog.Log($"GetAnalogueValueFn: {retVal}");
                         if (MathF.Abs(retVal) >= 0 && MathF.Abs(retVal) < 15) rightVerticalCenter = true;
-                        if (verticalLock)
+                        if (verticalLock && MathF.Abs(leftBumperValue) < 0.5)
                         {
                             if (MathF.Abs(retVal) > 75 && rightVerticalCenter)
                             {
@@ -1386,28 +1140,20 @@ namespace xivr
 
 
 
-
         //----
         // Controller Input
         //---- BaseAddress + 0x4E37F0
         private delegate void ControllerInputDg(UInt64 a, UInt64 b, uint c);
-        private Hook<ControllerInputDg> ControllerInputHook;
+        [Signature(Signatures.ControllerInput, DetourName = nameof(ControllerInputFn))]
+        private Hook<ControllerInputDg>? ControllerInputHook = null;
 
-        [HandleAttribute("ControllerInput", attribFnType.Initalize)]
-        public void ControllerInputInit(bool status)
-        {
-            IntPtr tmpAddress = DalamudApi.SigScanner.ScanText("E8 ?? ?? ?? ?? 41 8B 86 3C 04 00 00");
-            PluginLog.Log($"ControllerInput: {tmpAddress:X} {((UInt64)tmpAddress - BaseAddress):X}");
-            ControllerInputHook = Hook<ControllerInputDg>.FromAddress(tmpAddress, ControllerInputFn);
-        }
-
-        [HandleAttribute("ControllerInput", attribFnType.Status)]
+        [HandleStatus("ControllerInput")]
         public void ControllerInputStatus(bool status)
         {
             if (status == true)
-                ControllerInputHook.Enable();
+                ControllerInputHook?.Enable();
             else
-                ControllerInputHook.Disable();
+                ControllerInputHook?.Disable();
         }
 
         public void ControllerInputFn(UInt64 a, UInt64 b, uint c)
@@ -1467,7 +1213,8 @@ namespace xivr
             if (xboxStatus.select.active && motioncontrol)
                 *(float*)(controllerAddress + (UInt64)(offsets->select * 4)) = xboxStatus.select.value;
 
-            ControllerInputHook.Original(a, b, c);
+            leftBumperValue = *(float*)(controllerAddress + (UInt64)(offsets->left_bumper * 4));
+            ControllerInputHook!.Original(a, b, c);
         }
 
 
