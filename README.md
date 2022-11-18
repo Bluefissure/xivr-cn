@@ -10,20 +10,20 @@ XIVR 当前还在 **Alpha阶段**. 该插件目前以最低可行状态公布, �
 
 Notes: 
 
-• **The initial release is aimed at regular controller and motion controller players**. It can still be played with mouse and keyboard if you use the interact key (by default, Numpad 0) instead of the mouse to activate objects. Selecting objects in the world using the mouse has been disabled due to misalignment between the VR rendering and the mouse placement in the VR UI. 
+• **初始发布为面向普通控制器和VR手柄的玩家**. 如果你使用交互按键的话还是可以用键鼠游玩的 (默认按键为Numpad 0), 但你无法使用鼠标来选中对象. 鼠标选中对象由于VR内UI与鼠标真实坐标的不一致而被禁用. 
 
-• Currently, 3D is based on alternate eye rendering (AER). To hit a constant 90 FPS, **a strong GPU (RTX 3070+) is recommended**. For the optimal viewing experience, **it is highly recommended to set the game to windowed mode with the same per-eye resolution as your headset**. You can check the per-eye resolution in your SteamVR settings. Should the resolution surpass the limits of your display, it can be manually set by changing the `ScreenWidth` and `ScreenHeight` settings in FFXIV.cfg, normally located in the `Documents/My Games/Final Fantasy XIV - A Realm Reborn` folder.
+• 当前, 3D 是基于双眼交替渲染方案来渲染的 (AER). 要保持 90 FPS, **你需要一个强力的 GPU (RTX 3070+)**. 为保证良好体验, **十分推荐将游戏设置为窗口模式并将窗口分辨率设置为与你的头显渲染分辨率一致**. 你可以在SteamVR设置里看到头显的单眼渲染分辨率. 如果头显渲染分辨率超过了显示器支持的最大分辨率, 你可以在FFXIV.cfg里手动设置 `ScreenWidth` 和 `ScreenHeight` 参数, 该文件通常在 `Documents/My Games/Final Fantasy XIV - A Realm Reborn` 文件夹内.
 
-**• Install Instructions •**
-1. Download and install XIVLauncher from https://github.com/goatcorp/FFXIVQuickLauncher
-2. On the start screen hover over the red dalamud icon on the left hand side and click on settings
-3. Navigate to the Experimental tab and enable "Get plugin testing builds", and save and close
-4. Using the same method as 2. open the installer and select "All Plugins" on the left side and search for "xivr" in the search box
-5. Install the "XIVR" plugin from the list by selecting Install.
+**• 安装指南 •**
+1. 从 https://github.com/goatcorp/FFXIVQuickLauncher 下载并安装XIVLauncher
+2. 在标题界面的左侧使用鼠标悬浮Dalamud图标并选中Dalamud设置
+3. 进入测试版标签栏并点击 "获取测试版插件", 点击保存并关闭
+4. 使用第2步的方法打开插件安装器并在左侧选择 "所有插件" 并在搜索栏输入 "xivr" 进行搜索
+5. 在插件列表内选中 "XIVR" 插件并点击安装.
+6. PS: 国服没有, 请自行编译
+**• 功能 •**
 
-**• Features •**
-
-**3D rendering & 6DOF Head Tracking:** 
+**3D 渲染 & 6DOF 头部追踪:** 
 3D is based on alternate eye rendering (AER) with an accurate projection matrix. (Including support for headsets without parallel projection, like Pimax.) 
 Headtracking is *completely independent from the in game camera*, and the camera can be operated like usual in both first and third person.
 
