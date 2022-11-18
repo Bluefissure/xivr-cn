@@ -254,7 +254,7 @@ namespace xivr
         {
             if (GameWindowHandle == IntPtr.Zero)
             {
-                while ((GameWindowHandle = xivr_hooks.FindWindowEx(IntPtr.Zero, GameWindowHandle, "FFXIVGAME", "FINAL FANTASY XIV")) != IntPtr.Zero)
+                while ((GameWindowHandle = xivr_hooks.FindWindowEx(IntPtr.Zero, GameWindowHandle, "FFXIVGAME", "最终幻想XIV")) != IntPtr.Zero)
                 {
                     _ = xivr_hooks.GetWindowThreadProcessId(GameWindowHandle, out int pid);
 

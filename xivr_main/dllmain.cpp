@@ -63,25 +63,25 @@ extern "C"
 
 
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
+BOOL APIENTRY DllMain(HMODULE hModule,
+	DWORD  ul_reason_for_call,
+	LPVOID lpReserved
+)
 {
-    switch (ul_reason_for_call)
-    {
+	switch (ul_reason_for_call)
+	{
 	case DLL_PROCESS_ATTACH: InitInstance(hModule); break;
 	case DLL_PROCESS_DETACH: ExitInstance(); break;
 	case DLL_THREAD_ATTACH:  break;
-    case DLL_THREAD_DETACH:  break; 
-    }
-    return TRUE;
+	case DLL_THREAD_DETACH:  break;
+	}
+	return TRUE;
 }
 
 void OpenLogFile()
 {
-	if(logging)
-		myfile.open("F:\\XIVR_DBG\\out.txt", std::ios::out | std::ios::app);
+	if (logging)
+		myfile.open("F:/XIVR_DBG/out.txt", std::ios::out | std::ios::app);
 }
 
 void CloseLogFile()
@@ -188,7 +188,7 @@ void DestroyBackbufferClone()
 
 __declspec(dllexport) bool SetDX11(unsigned long long struct_device)
 {
-	if(myfile.is_open())
+	if (myfile.is_open())
 		myfile << "SetDX11:\n";
 	if (device == nullptr)
 	{
@@ -276,7 +276,7 @@ __declspec(dllexport) bool SetDX11(unsigned long long struct_device)
 		// uiRenderTexture[0].Height1 = uiRenderTarget[0].textureDesc.Height;
 		uiRenderTexture[0].Texture = uiRenderTarget[0].pTexture;
 		uiRenderTexture[0].ShaderResourceView = uiRenderTarget[0].pShaderResource;
-		uiRenderTexture[0].RenderTargetPtr = (unsigned long long)&uiRenderTarget[0].pRenderTarget;
+		uiRenderTexture[0].RenderTargetPtr = (unsigned long long) & uiRenderTarget[0].pRenderTarget;
 
 		uiRenderTexture[1].uk1 = device->SwapChain->BackBuffer->uk1;
 		uiRenderTexture[1].uk5 = 0x990F0F0F;
@@ -287,7 +287,7 @@ __declspec(dllexport) bool SetDX11(unsigned long long struct_device)
 		// uiRenderTexture[1].Height1 = uiRenderTarget[1].textureDesc.Height;
 		uiRenderTexture[1].Texture = uiRenderTarget[1].pTexture;
 		uiRenderTexture[1].ShaderResourceView = uiRenderTarget[1].pShaderResource;
-		uiRenderTexture[1].RenderTargetPtr = (unsigned long long)&uiRenderTarget[1].pRenderTarget;
+		uiRenderTexture[1].RenderTargetPtr = (unsigned long long) & uiRenderTarget[1].pRenderTarget;
 		if (myfile.is_open())
 		{
 			myfile << ".. Done" << std::endl;
@@ -314,7 +314,7 @@ __declspec(dllexport) bool SetDX11(unsigned long long struct_device)
 	}
 	if (myfile.is_open())
 		myfile << "SetDX11 .. Done:" << std::endl;
-	
+
 	return enabled;
 }
 
@@ -325,7 +325,7 @@ __declspec(dllexport) void UnsetDX11()
 	enabled = false;
 	if (myfile.is_open())
 		myfile << "### StopDX11" << std::endl;
-	
+
 	if (myfile.is_open())
 		myfile << "Destroying BackBufferClone ..";
 	DestroyBackbufferClone();
@@ -384,7 +384,7 @@ __declspec(dllexport) void SetThreadedEye(int eye)
 
 __declspec(dllexport) void RenderVR()
 {
-	if(enabled && threadedEye == 1)
+	if (enabled && threadedEye == 1)
 		svr.Render(BackBufferCopyShared[0].pTexture, BackBufferCopyShared[1].pTexture);
 }
 
@@ -474,7 +474,7 @@ __declspec(dllexport) void RenderFloatingScreen()
 		int offEye[] = { 1, 0 };
 		int eyeT = offEye[threadedEye];
 
-		rend->SetClearColor(new float[4]{ 0.f, 0.f, 0.f, 0.f });
+		rend->SetClearColor(new float[4] { 0.f, 0.f, 0.f, 0.f });
 		rend->SetBlendIndex(1);
 		//rend->DoRender(viewport, BackBufferCopy[threadedEye].pRenderTarget, uiGradiant.pShaderResource, projectionMatrix, viewMatrix);
 		rend->DoRender(viewport, BackBufferCopy[threadedEye].pRenderTarget, uiRenderTarget[0].pShaderResource, projectionMatrix, viewMatrix);

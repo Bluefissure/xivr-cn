@@ -27,21 +27,21 @@ namespace xivr
                 }
 
                 bool isAutoEnabled = xivr.Configuration.isAutoEnabled;
-                if (ImGui.Checkbox("Auto Enable if steamvr is active", ref isAutoEnabled))
+                if (ImGui.Checkbox("SteamVR可用时自动启用", ref isAutoEnabled))
                 {
                     xivr.Configuration.isAutoEnabled = isAutoEnabled;
                     xivr.Configuration.Save();
                 }
 
                 bool autoResize = xivr.Configuration.autoResize;
-                if (ImGui.Checkbox("Auto Resize when activated", ref autoResize))
+                if (ImGui.Checkbox("启动后自动调整窗口大小", ref autoResize))
                 {
                     xivr.Configuration.autoResize = autoResize;
                     xivr.Configuration.Save();
                 }
 
                 bool conLock = xivr.Configuration.conloc;
-                if (ImGui.Checkbox("Enable first person controller locomotion", ref conLock))
+                if (ImGui.Checkbox("启用第一人称VR控制器 Locomotion 功能", ref conLock))
                 {
                     xivr.Configuration.conloc = conLock;
                     xivr.Configuration.Save();
@@ -49,7 +49,7 @@ namespace xivr
                 }
 
                 bool motioncontrol = xivr.Configuration.motioncontrol;
-                if (ImGui.Checkbox("Enable motion controllers", ref motioncontrol))
+                if (ImGui.Checkbox("启用VR控制器", ref motioncontrol))
                 {
                     xivr.Configuration.motioncontrol = motioncontrol;
                     xivr.Configuration.Save();
@@ -71,7 +71,7 @@ namespace xivr
                 }
 
                 bool horizontalLock = xivr.Configuration.horizontalLock;
-                if (ImGui.Checkbox("固定水平视角移动程度", ref horizontalLock))
+                if (ImGui.Checkbox("固定水平视角旋转程度", ref horizontalLock))
                 {
                     xivr.Configuration.horizontalLock = horizontalLock;
                     xivr.Configuration.Save();
