@@ -398,8 +398,8 @@ namespace xivr
 
         public Point GetWindowSize()
         {
-            Device *dev = Device.Instance();
-            return new Point((int)dev->Width, (int)dev->Height);
+            ffxivDevice* dev = ffxivDevice.Instance();
+            return new Point((int) dev->Width, (int) dev->Height);
         }
 
         public void WindowResize(IntPtr hwnd, int width, int height)
@@ -407,9 +407,9 @@ namespace xivr
             //----
             // Resizes the internal buffers
             //----
-            Device* dev = Device.Instance();
-            dev->NewWidth = (uint)width;
-            dev->NewHeight = (uint)height;
+            ffxivDevice* dev = ffxivDevice.Instance();
+            dev->NewWidth = (uint) width;
+            dev->NewHeight = (uint) height;
             dev->RequestResolutionChange = 1;
 
             //----

@@ -14,6 +14,7 @@ using Dalamud.Interface;
 using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using xivr.Structures;
 
 namespace xivr
 {
@@ -49,10 +50,13 @@ namespace xivr
                 cfg = DalamudApi.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
                 cfg.Initialize(DalamudApi.PluginInterface);
 
-
                 DalamudApi.Framework.Update += Update;
                 DalamudApi.PluginInterface.UiBuilder.Draw += Draw;
                 DalamudApi.PluginInterface.UiBuilder.OpenConfigUi += ToggleConfig;
+
+                // Custom ffxivDevice cuz 6.1 FFXIVClientStruct missing some struct offset
+                IntPtr ffxivDeviceAddr = DalamudApi.SigScanner.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? F3 0F 10 44 24");
+                ffxivDevice.ppInstance = (ffxivDevice**) ffxivDeviceAddr;
 
                 try
                 {

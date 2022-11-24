@@ -16,48 +16,48 @@ namespace xivr
 
             ImGui.SetNextWindowSize(new Vector2(500, 850) * ImGuiHelpers.GlobalScale, ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowSizeConstraints(new Vector2(500, 850) * ImGuiHelpers.GlobalScale, new Vector2(9999));
-            if (ImGui.Begin("Configuration", ref isVisible, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+            if (ImGui.Begin("XIVR 配置", ref isVisible, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
                 ImGui.BeginChild("VR", new Vector2(300, 150) * ImGuiHelpers.GlobalScale, true);
 
-                if (ImGui.Checkbox("Enable", ref xivr.cfg.data.isEnabled))
+                if (ImGui.Checkbox("启用", ref xivr.cfg.data.isEnabled))
                 {
                     xivr.cfg.Save();
                 }
 
-                if (ImGui.Checkbox("Auto Enable if steamvr is active", ref xivr.cfg.data.isAutoEnabled))
+                if (ImGui.Checkbox("当SteamVR可用时自动启用", ref xivr.cfg.data.isAutoEnabled))
                 {
                     xivr.cfg.Save();
                 }
 
-                if (ImGui.Checkbox("Auto Resize when activated", ref xivr.cfg.data.autoResize))
+                if (ImGui.Checkbox("启动后自动调整游戏分辨率", ref xivr.cfg.data.autoResize))
                 {
                     xivr.cfg.Save();
                 }
-                if (ImGui.Button("Recenter"))
+                if (ImGui.Button("重新定位中间"))
                     xivr.cfg.data.runRecenter = true;
 
 
                 ImGui.EndChild();
 
-                ImGui.BeginChild("Misc", new Vector2(300, 150) * ImGuiHelpers.GlobalScale, true);
+                ImGui.BeginChild("杂项", new Vector2(300, 150) * ImGuiHelpers.GlobalScale, true);
 
-                if (ImGui.Checkbox("Enable first person controller locomotion", ref xivr.cfg.data.conloc))
+                if (ImGui.Checkbox("启用第一人称VR控制器 Locomotion 功能", ref xivr.cfg.data.conloc))
                 {
                     xivr.cfg.Save(); xivr.Plugin.doUpdate = true;
                 }
 
-                if (ImGui.Checkbox("Enable motion controllers", ref xivr.cfg.data.motioncontrol))
+                if (ImGui.Checkbox("启用VR控制器", ref xivr.cfg.data.motioncontrol))
                 {
                     xivr.cfg.Save(); xivr.Plugin.doUpdate = true;
                 }
 
-                if (ImGui.Checkbox("Force floating screen", ref xivr.cfg.data.forceFloatingScreen))
+                if (ImGui.Checkbox("强制悬浮屏幕", ref xivr.cfg.data.forceFloatingScreen))
                 {
                     xivr.cfg.Save(); xivr.Plugin.doUpdate = true;
                 }
 
-                if (ImGui.Checkbox("Force floating screen in Cutscene", ref xivr.cfg.data.forceFloatingInCutscene))
+                if (ImGui.Checkbox("强制过场动画期间悬浮屏幕", ref xivr.cfg.data.forceFloatingInCutscene))
                 {
                     xivr.cfg.Save(); xivr.Plugin.doUpdate = true;
                 }
@@ -84,17 +84,17 @@ namespace xivr
             float snapYamount = xivr.cfg.data.snapRotateAmountY;
 
 
-            ImGui.BeginChild("Snap Turning", new Vector2(300, 200) * ImGuiHelpers.GlobalScale, true);
+            ImGui.BeginChild("快速旋转", new Vector2(300, 200) * ImGuiHelpers.GlobalScale, true);
 
-            ImGui.Checkbox("Keep headset level with horizon", ref lockHorizon);
+            ImGui.Checkbox("保持头显高度与地平线一致", ref lockHorizon);
 
-            ImGui.Text("Horizontal Snap:");
-            ImGui.Text("On/Off:"); ImGui.SameLine(); ImGui.Checkbox("##DrawLocks:hs", ref snapX);
-            ImGui.Text("Amount:"); ImGui.SameLine(); ImGui.SliderFloat("##DrawLocks:hsa", ref snapXamount, 0, 90, "%.0f");
+            ImGui.Text("水平旋转:");
+            ImGui.Text("开/关:"); ImGui.SameLine(); ImGui.Checkbox("##DrawLocks:hs", ref snapX);
+            ImGui.Text("旋转程度:"); ImGui.SameLine(); ImGui.SliderFloat("##DrawLocks:hsa", ref snapXamount, 0, 90, "%.0f");
 
-            ImGui.Text("Vertical Snap:");
-            ImGui.Text("On/Off:"); ImGui.SameLine(); ImGui.Checkbox("##DrawLocks:vs", ref snapY);
-            ImGui.Text("Amount:"); ImGui.SameLine(); ImGui.SliderFloat("##DrawLocks:vsa", ref snapYamount, 0, 90, "%.0f");
+            ImGui.Text("垂直旋转:");
+            ImGui.Text("开/关:"); ImGui.SameLine(); ImGui.Checkbox("##DrawLocks:vs", ref snapY);
+            ImGui.Text("旋转程度:"); ImGui.SameLine(); ImGui.SliderFloat("##DrawLocks:vsa", ref snapYamount, 0, 90, "%.0f");
 
             if (xivr.cfg.data.horizonLock != lockHorizon)
                 xivr.Plugin.doUpdate = true; xivr.cfg.data.horizonLock = lockHorizon;
@@ -127,15 +127,15 @@ namespace xivr
 
             ImGui.BeginChild("UI", new Vector2(300, 250) * ImGuiHelpers.GlobalScale, true);
 
-            ImGui.Text("Z Offset"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zoff", ref uiOffsetZ);
-            ImGui.Text("Z Scale"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zscale", ref uiOffsetScale);
-            ImGui.Text("IPD Offset"); ImGui.SameLine(); ImGui.SliderFloat("##DrawUISetings:ipdoff", ref ipdOffset, -1, 1, "%f");
+            ImGui.Text("Z 偏移"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zoff", ref uiOffsetZ);
+            ImGui.Text("Z 缩放"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zscale", ref uiOffsetScale);
+            ImGui.Text("IPD 偏移"); ImGui.SameLine(); ImGui.SliderFloat("##DrawUISetings:ipdoff", ref ipdOffset, -1, 1, "%f");
 
-            ImGui.Text("Swap Eyes"); ImGui.SameLine(); ImGui.Checkbox("##DrawUISetings:swapeyes", ref swapEyes);
-            ImGui.Text("Swap Eyes UI"); ImGui.SameLine(); ImGui.Checkbox("##DrawUISetings:swapeyesui", ref swapEyesUI);
+            ImGui.Text("交换渲染(渲染与左右眼不一致时使用)"); ImGui.SameLine(); ImGui.Checkbox("##DrawUISetings:swapeyes", ref swapEyes);
+            ImGui.Text("交换UI渲染(渲染与左右眼不一致时使用)"); ImGui.SameLine(); ImGui.Checkbox("##DrawUISetings:swapeyesui", ref swapEyesUI);
 
-            ImGui.Text("X Offset"); ImGui.SameLine(); ImGui.SliderFloat("##DrawUISetings:xoff", ref offsetAmountX, -150, 150, "%.0f");
-            ImGui.Text("Y Offset"); ImGui.SameLine(); ImGui.SliderFloat("##DrawUISetings:yoff", ref offsetAmountY, -150, 150, "%.0f");
+            ImGui.Text("X 偏移"); ImGui.SameLine(); ImGui.SliderFloat("##DrawUISetings:xoff", ref offsetAmountX, -150, 150, "%.0f");
+            ImGui.Text("Y 偏移"); ImGui.SameLine(); ImGui.SliderFloat("##DrawUISetings:yoff", ref offsetAmountY, -150, 150, "%.0f");
 
             if (xivr.cfg.data.uiOffsetZ != uiOffsetZ)
                 xivr.Plugin.doUpdate = true; xivr.cfg.data.uiOffsetZ = uiOffsetZ;
