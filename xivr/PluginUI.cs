@@ -129,7 +129,7 @@ namespace xivr
 
             ImGui.Text("Z 偏移"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zoff", ref uiOffsetZ);
             ImGui.Text("Z 缩放"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zscale", ref uiOffsetScale);
-            ImGui.Text("IPD 偏移"); ImGui.SameLine(); ImGui.SliderFloat("##DrawUISetings:ipdoff", ref ipdOffset, -1, 1, "%f");
+            ImGui.Text("IPD 偏移"); ImGui.SameLine(); ImGui.SliderFloat("##DrawUISetings:ipdoff", ref ipdOffset, -10, 10, "%f");
 
             ImGui.Text("交换渲染(渲染与左右眼不一致时使用)"); ImGui.SameLine(); ImGui.Checkbox("##DrawUISetings:swapeyes", ref swapEyes);
             ImGui.Text("交换UI渲染(渲染与左右眼不一致时使用)"); ImGui.SameLine(); ImGui.Checkbox("##DrawUISetings:swapeyesui", ref swapEyesUI);
