@@ -14,9 +14,10 @@ namespace xivr
             if (!isVisible)
                 return;
 
-            ImGui.SetNextWindowSize(new Vector2(500, 850) * ImGuiHelpers.GlobalScale, ImGuiCond.FirstUseEver);
-            ImGui.SetNextWindowSizeConstraints(new Vector2(500, 850) * ImGuiHelpers.GlobalScale, new Vector2(9999));
-            if (ImGui.Begin("XIVR 配置", ref isVisible, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+            ImGui.SetNextWindowSize(new Vector2(320, 800) * ImGuiHelpers.GlobalScale, ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSizeConstraints(new Vector2(320, 800) * ImGuiHelpers.GlobalScale, new Vector2(9999));
+            //if (ImGui.Begin("XIVR 配置", ref isVisible, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+            if (ImGui.Begin("Configuration", ref isVisible, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
                 ImGui.BeginChild("VR", new Vector2(300, 150) * ImGuiHelpers.GlobalScale, true);
 
@@ -36,6 +37,11 @@ namespace xivr
                 }
                 if (ImGui.Button("重新定位中间"))
                     xivr.cfg.data.runRecenter = true;
+
+                if (ImGui.Checkbox("Verbose Logs", ref xivr.cfg.data.vLog))
+                {
+                    xivr.cfg.Save(); xivr.Plugin.doUpdate = true;
+                }
 
 
                 ImGui.EndChild();
@@ -127,8 +133,8 @@ namespace xivr
 
             ImGui.BeginChild("UI", new Vector2(300, 250) * ImGuiHelpers.GlobalScale, true);
 
-            ImGui.Text("Z 偏移"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zoff", ref uiOffsetZ);
-            ImGui.Text("Z 缩放"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zscale", ref uiOffsetScale);
+            ImGui.Text("UI 距离"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zoff", ref uiOffsetZ);
+            ImGui.Text("UI 缩放"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zscale", ref uiOffsetScale);
             ImGui.Text("IPD 偏移"); ImGui.SameLine(); ImGui.SliderFloat("##DrawUISetings:ipdoff", ref ipdOffset, -10, 10, "%f");
 
             ImGui.Text("交换渲染(渲染与左右眼不一致时使用)"); ImGui.SameLine(); ImGui.Checkbox("##DrawUISetings:swapeyes", ref swapEyes);
