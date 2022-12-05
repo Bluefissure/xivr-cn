@@ -38,7 +38,7 @@ namespace xivr
                 if (ImGui.Button("重新定位中间"))
                     xivr.cfg.data.runRecenter = true;
 
-                if (ImGui.Checkbox("Verbose Logs", ref xivr.cfg.data.vLog))
+                if (ImGui.Checkbox("调试日志 (用于排错)", ref xivr.cfg.data.vLog))
                 {
                     xivr.cfg.Save(); xivr.Plugin.doUpdate = true;
                 }
@@ -133,7 +133,7 @@ namespace xivr
 
             ImGui.BeginChild("UI", new Vector2(300, 250) * ImGuiHelpers.GlobalScale, true);
 
-            ImGui.Text("UI 距离"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zoff", ref uiOffsetZ);
+            ImGui.Text("UI 距离偏移"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zoff", ref uiOffsetZ);
             ImGui.Text("UI 缩放"); ImGui.SameLine(); ImGui.InputFloat("##DrawUISetings:zscale", ref uiOffsetScale);
             ImGui.Text("IPD 偏移"); ImGui.SameLine(); ImGui.SliderFloat("##DrawUISetings:ipdoff", ref ipdOffset, -10, 10, "%f");
 
