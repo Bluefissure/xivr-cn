@@ -54,10 +54,6 @@ namespace xivr
                 DalamudApi.PluginInterface.UiBuilder.Draw += Draw;
                 DalamudApi.PluginInterface.UiBuilder.OpenConfigUi += ToggleConfig;
 
-                // Custom ffxivDevice cuz 6.1 FFXIVClientStruct missing some struct offset
-                IntPtr ffxivDeviceAddr = DalamudApi.SigScanner.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? F3 0F 10 44 24");
-                ffxivDevice.ppInstance = (ffxivDevice**) ffxivDeviceAddr;
-
                 try
                 {
                     Assembly myAssembly = Assembly.GetExecutingAssembly();

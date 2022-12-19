@@ -198,7 +198,7 @@ namespace xivr
         private static class Signatures
         {
             internal const string CameraManagerInstance = "48 8B 05 ?? ?? ?? ?? 83 78 50 00 75 22";
-            internal const string GlobalScale = "F3 44 0F 10 05 ?? ?? ?? ?? 4D 85 ED";
+            internal const string GlobalScale = "F3 0F 10 0D ?? ?? ?? ?? F3 0F 10 40 4C";
             internal const string RenderTargetManager = "48 8B 05 ?? ?? ?? ?? 49 63 C8";
 
             internal const string DisableLeftClick = "E8 ?? ?? ?? ?? BA ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 84 C0 74 16";
@@ -208,13 +208,13 @@ namespace xivr
             internal const string Pushback = "E8 ?? ?? ?? ?? EB ?? 8B 87 6C 04 00 00";
             internal const string PushbackUI = "E8 ?? ?? ?? ?? EB 05 E8 ?? ?? ?? ?? 48 8B 5C 24 78";
             internal const string OnRequestedUpdate = "48 8B C4 41 56 48 81 EC ?? ?? ?? ?? 48 89 58 F0";
-            internal const string DXGIPresent = "48 89 5C 24 18 56 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 70";
+            internal const string DXGIPresent = "E8 ?? ?? ?? ?? C6 47 79 00 48 8B 8F";
             internal const string CamManagerSetMatrix = "4C 8B DC 49 89 5B 10 49 89 73 18 49 89 7B 20 55 49 8D AB";
             internal const string CSUpdateConstBuf = "4C 8B DC 49 89 5B 20 55 57 41 56 49 8D AB";
             internal const string SetUIProj = "E8 ?? ?? ?? ?? 8B 0D ?? ?? ?? ?? 48 8D 94 24";
-            internal const string CalculateViewMatrix = "40 53 48 81 EC ?? ?? ?? ?? F6 81 EC 00 00 00 ??";
-            internal const string UpdateRotation = "40 53 48 83 EC ?? 8B 81 40 01 00 00 48 8B D9 0F 29 74 24 20";
-            internal const string MakeProjectionMatrix2 = "E8 ?? ?? ?? ?? 4C 8B 3D ?? ?? ?? ?? 41 0F 28 C1";
+            internal const string CalculateViewMatrix = "E8 ?? ?? ?? ?? 8B 83 EC 00 00 00 D1 E8 A8 01 74 1B";
+            internal const string UpdateRotation = "E8 ?? ?? ?? ?? 0F B6 93 20 02 00 00 48 8B CB";
+            internal const string MakeProjectionMatrix2 = "E8 ?? ?? ?? ?? 4C 8B 2D ?? ?? ?? ?? 41 0F 28 C2";
             internal const string CSMakeProjectionMatrix = "E8 ?? ?? ?? ?? 0F 28 46 10 4C 8D 7E 10";
             internal const string RenderThreadSetRenderTarget = "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? F3 41 0F 10 5A 18";
             internal const string NamePlateDraw = "0F B7 81 ?? ?? ?? ?? 4C 8B C1 66 C1 E0 06";
@@ -428,7 +428,7 @@ namespace xivr
 
         public Point GetWindowSize()
         {
-            ffxivDevice* dev = ffxivDevice.Instance();
+            Device* dev = Device.Instance();
             return new Point((int) dev->Width, (int) dev->Height);
         }
 
@@ -437,7 +437,7 @@ namespace xivr
             //----
             // Resizes the internal buffers
             //----
-            ffxivDevice* dev = ffxivDevice.Instance();
+            Device* dev = Device.Instance();
             dev->NewWidth = (uint) width;
             dev->NewHeight = (uint) height;
             dev->RequestResolutionChange = 1;
@@ -474,7 +474,7 @@ namespace xivr
                     cmd->colorB = 0;
                     cmd->colorA = 0;
                     cmd->unkn1 = 1;
-                    PushbackFn(threadedOffset, queueData);
+                    PushbackFn!((threadedOffset + 0x18), (UInt64)(*(int*)(threadedOffset + 0x8)), queueData);
                 }
             }
         }
@@ -532,7 +532,7 @@ namespace xivr
         //----
         // Pushback
         //----
-        private delegate void PushbackDg(UInt64 a, UInt64 b);
+        private delegate void PushbackDg(UInt64 a, UInt64 b, UInt64 c);
         [Signature(Signatures.Pushback, Fallibility = Fallibility.Fallible)]
         private PushbackDg? PushbackFn = null;
 

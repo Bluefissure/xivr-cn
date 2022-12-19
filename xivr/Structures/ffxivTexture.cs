@@ -7,7 +7,7 @@ namespace xivr.Structures
     [StructLayout(LayoutKind.Explicit, Size = 0xA8)]
     public unsafe struct Texture
     {
-        [FieldOffset(0x00)]
+        [FieldOffset(0)]
         public unsafe void* vtbl;
 
         [FieldOffset(0x18)]
@@ -23,33 +23,39 @@ namespace xivr.Structures
         public uint Height;
 
         [FieldOffset(0x40)]
-        public uint Depth;
+        public uint Width1;
 
         [FieldOffset(0x44)]
-        public byte MipLevel;
-
-        [FieldOffset(0x45)]
-        public byte Unk_35;
-
-        [FieldOffset(0x46)]
-        public byte Unk_36;
-
-        [FieldOffset(0x47)]
-        public byte Unk_37;
+        public uint Height1;
 
         [FieldOffset(0x48)]
-        public TextureFormat TextureFormat;
+        public uint Depth;
 
         [FieldOffset(0x4C)]
-        public uint Flags;
+        public byte MipLevel;
+
+        [FieldOffset(0x4D)]
+        public byte Unk_35;
+
+        [FieldOffset(0x4E)]
+        public byte Unk_36;
+
+        [FieldOffset(0x4F)]
+        public byte Unk_37;
 
         [FieldOffset(0x50)]
-        public unsafe void* D3D11Texture2D;
+        public TextureFormat TextureFormat;
+
+        [FieldOffset(0x54)]
+        public uint Flags;
 
         [FieldOffset(0x58)]
+        public unsafe void* D3D11Texture2D;
+
+        [FieldOffset(0x60)]
         public unsafe void* D3D11ShaderResourceView;
 
-        [FieldOffset(0x68)]
+        [FieldOffset(0x70)]
         public UInt64 D3D11RenderTargetPtr;
     }
 }
