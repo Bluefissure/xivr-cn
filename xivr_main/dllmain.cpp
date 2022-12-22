@@ -297,8 +297,8 @@ __declspec(dllexport) bool SetDX11(unsigned long long struct_device, unsigned lo
 		uiRenderTexture[0].Notifier = device->SwapChain->BackBuffer->Notifier;
 		uiRenderTexture[0].Width = uiRenderTarget[0].textureDesc.Width;
 		uiRenderTexture[0].Height = uiRenderTarget[0].textureDesc.Height;
-		// uiRenderTexture[0].Width1 = uiRenderTarget[0].textureDesc.Width;
-		// uiRenderTexture[0].Height1 = uiRenderTarget[0].textureDesc.Height;
+		uiRenderTexture[0].Width1 = uiRenderTarget[0].textureDesc.Width;
+		uiRenderTexture[0].Height1 = uiRenderTarget[0].textureDesc.Height;
 		uiRenderTexture[0].Texture = uiRenderTarget[0].pTexture;
 		uiRenderTexture[0].ShaderResourceView = uiRenderTarget[0].pShaderResource;
 		uiRenderTexture[0].RenderTargetPtr = (unsigned long long) & uiRenderTarget[0].pRenderTarget;
@@ -308,8 +308,8 @@ __declspec(dllexport) bool SetDX11(unsigned long long struct_device, unsigned lo
 		uiRenderTexture[1].Notifier = device->SwapChain->BackBuffer->Notifier;
 		uiRenderTexture[1].Width = uiRenderTarget[1].textureDesc.Width;
 		uiRenderTexture[1].Height = uiRenderTarget[1].textureDesc.Height;
-		// uiRenderTexture[1].Width1 = uiRenderTarget[1].textureDesc.Width;
-		// uiRenderTexture[1].Height1 = uiRenderTarget[1].textureDesc.Height;
+		uiRenderTexture[1].Width1 = uiRenderTarget[1].textureDesc.Width;
+		uiRenderTexture[1].Height1 = uiRenderTarget[1].textureDesc.Height;
 		uiRenderTexture[1].Texture = uiRenderTarget[1].pTexture;
 		uiRenderTexture[1].ShaderResourceView = uiRenderTarget[1].pShaderResource;
 		uiRenderTexture[1].RenderTargetPtr = (unsigned long long)&uiRenderTarget[1].pRenderTarget;
